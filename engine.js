@@ -621,10 +621,28 @@ function collectionStatus(S){
 }
 function taleOf(axisId){return (D.tales&&D.tales[String(axisId)])||null;}
 function treasureChapter(axisId,chapterId){const t=taleOf(axisId);if(!t)return null;if(chapterId==='FINAL')return {id:'FINAL',title:t.title,beat:t.goal};return (t.chapters||[]).find(c=>c.id===chapterId)||null;}
+/* ---------- escada de recompensas por estrelas (place value 10:1) ----------
+   Derivada de S.stars (total acumulado, §10): 10 estrelas = 1 safira, 10 safiras = 1 diamante,
+   10 diamantes = 1 coroa. É pura leitura do total (base 10) — não guarda estado novo, não sorteia;
+   é conquista por mérito, coexiste com os tesouros/baús narrativos. */
+function rewardTiers(S){
+  var n=Math.max(0,(S&&S.stars)||0);
+  var r=n%10;
+  return {total:n,coroas:Math.floor(n/1000),diamantes:Math.floor(n/100)%10,
+    safiras:Math.floor(n/10)%10,estrelas:r,toNextSafira:(r===0?10:10-r)};
+}
+/* qual maior tier foi cruzado indo de 'before' para 'after' estrelas totais (para celebrar 1x). */
+function tierCrossed(before,after){
+  before=Math.max(0,before||0);after=Math.max(0,after||0);
+  if(Math.floor(after/1000)>Math.floor(before/1000))return 'coroa';
+  if(Math.floor(after/100)>Math.floor(before/100))return 'diamante';
+  if(Math.floor(after/10)>Math.floor(before/10))return 'safira';
+  return null;
+}
 const api={init,newState,migrateState,addChild,setActiveChild,mastery,computeEE,recordAttempt,levelCandidate,confidence,confidenceCore,decayed,n4Confirmed,confirmSeededAncestors,entryIndex,unstable,AR,pruneWindow,pruneAttempts,
   evaluateTreasures,collectionStatus,rarityForChapter,chapterComplete,taleOf,treasureChapter,
   coveredFormats,unlocked,axisProgress,buildMission,focusSkill,pickItem,playableOrder,
-  nextPlacementItem,recordPlacement,placementAxis,sessionAxisGroups,markReviews,scheduleReview,sessionStars,
+  nextPlacementItem,recordPlacement,placementAxis,sessionAxisGroups,markReviews,scheduleReview,sessionStars,rewardTiers,tierCrossed,
   prereqsOf,LEVELS,FORMATS,P,li,
   skills:()=>D.skills,items:()=>D.items,skillById:id=>skillById[id],itemsBySkill:id=>itemsBySkill[id]||[],
   playable:()=>PLAYABLE,axisSkills:id=>axisSkills[id]||[]};

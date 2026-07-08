@@ -37,7 +37,10 @@ function now(){return Date.now()+S.devDayOffset*DAY;}
 let voice=null;
 function loadVoice(){const vs=speechSynthesis.getVoices();voice=vs.find(v=>/pt-BR/i.test(v.lang))||vs.find(v=>/pt/i.test(v.lang))||null;}
 if('speechSynthesis'in window){loadVoice();speechSynthesis.onvoiceschanged=loadVoice;}
-function speak(t){if(!('speechSynthesis'in window)||!t)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';if(voice)u.voice=voice;u.rate=.98;speechSynthesis.speak(u);}catch(e){}}
+/* speakable: prepara o texto para a voz — troca símbolos matemáticos por palavras (menos/mais/vezes/dividido por/igual a) e colapsa repetições do MESMO emoji que o TTS leria uma a uma (ex.: '6 uvas 🍇🍇🍇🍇🍇🍇' → '6 uvas 🍇'), preservando sequências informativas de ícones distintos (identificação/pictograma/padrão). Só afeta a FALA; o visual do enunciado permanece intacto. */
+function speakable(t){if(!t)return t;var s=String(t);s=s.replace(/(\p{Extended_Pictographic}\uFE0F?)(?:\s*\1)+/gu,'$1');s=s.replace(/\u00D7/g,' vezes ').replace(/\u00F7/g,' dividido por ');s=s.replace(/(\d)\s*[xX]\s*(\d)/g,'$1 vezes $2');s=s.replace(/(\d)\s*[-\u2212\u2013\u2014]\s*(\d)/g,'$1 menos $2');s=s.replace(/(\d)\s*\+\s*/g,'$1 mais ');s=s.replace(/\s*=\s*/g,' igual a ');s=s.replace(/(\d)\s*>\s*(\d)/g,'$1 maior que $2').replace(/(\d)\s*<\s*(\d)/g,'$1 menor que $2');return s.replace(/\s{2,}/g,' ').trim();}
+function speak(t){if(!('speechSynthesis'in window)||!t)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(speakable(t));u.lang='pt-BR';if(voice)u.voice=voice;u.rate=.98;speechSynthesis.speak(u);}catch(e){}}
+function rewardLadderStr(rt){var p=[];if(rt.coroas)p.push('👑 '+rt.coroas);if(rt.diamantes)p.push('💎 '+rt.diamantes);if(rt.safiras)p.push('🔷 '+rt.safiras);p.push('⭐ '+rt.estrelas);return p.join(' · ');}
 /* ---------- pipeline de enunciado por perfil de leitura (05/07, item 3 da auditoria) ----------
    Prioridade da fonte: MP3 pré-gerado (item.audio) > TTS do navegador.
    Texto falado: item.audio_text (versão para voz) tem prioridade sobre prompt.text (versão lida).
@@ -132,7 +135,7 @@ function renderChild(){
   const hi=el('div');hi.appendChild(el('h2',null,'Oi, '+S.child.nickname+'!'));
   hi.appendChild(el('div','muted small',S.placement.finished?'Para onde vamos hoje?':'Vamos explorar as ilhas da matemática!'));
   left.appendChild(hi);head.appendChild(left);
-  head.appendChild(el('div','starbar','⭐ '+S.stars+' &nbsp;·&nbsp; 🏅 '+S.selos.length));
+  head.appendChild(el('div','starbar',rewardLadderStr(E.rewardTiers(S))+' &nbsp;·&nbsp; 🏅 '+S.selos.length));
   wrap.appendChild(head);
 
   if(!S.placement.finished){
@@ -249,11 +252,42 @@ function renderTrail(axisId){
     for(let i=1;i<=6;i++){const b=el('i');if(li(m.level)>=i)b.classList.add(m.level==='N6'?'gold':'on');seg.appendChild(b);}
     mid.appendChild(seg);cell.appendChild(mid);
     if(playable&&unlocked){
-      cell.onclick=()=>startSession(E.buildMission(S,now(),s.skill_id));
+      cell.onclick=()=>startMission(s);
     }else if(!playable){cell.appendChild(el('span','soon','em breve'));}
     trail.appendChild(cell);
   });
   wrap.appendChild(trail);view.appendChild(wrap);
+}
+/* ---------- abertura narrativa da missão (o "onde se quer chegar") ---------- */
+function chapterFor(skill){
+  const tale=E.taleOf(skill.axis_id);if(!tale)return null;
+  const ch=(tale.chapters||[]).find(c=>(c.skills||[]).includes(skill.skill_id));
+  return ch?{tale,ch}:null;
+}
+function startMission(skill){
+  const ci=chapterFor(skill);
+  if(!ci){startSession(E.buildMission(S,now(),skill.skill_id));return;} // sem conto: começa direto
+  renderMissionIntro(skill,ci);
+}
+function renderMissionIntro(skill,ci){
+  clear(view);const wrap=el('div','child-wrap');
+  const meta=AXMETA[skill.axis_id];
+  const isFirst=!!(ci.tale.chapters&&ci.tale.chapters[0]&&ci.tale.chapters[0].id===ci.ch.id);
+  const say=(isFirst&&ci.tale.intro?ci.tale.intro+' ':'')+ci.ch.beat; // 1ª missão da ilha: abre com a cena do conto
+  const back=el('button','btn ghost','\u2190 Voltar');back.onclick=()=>renderTrail(skill.axis_id);wrap.appendChild(back);
+  const card=el('div','mission-card');card.style.textAlign='center';
+  card.appendChild(el('div',null,'<div style="font-size:52px">'+(meta&&meta.ic||'\ud83d\udcd6')+'</div>'));
+  card.appendChild(el('div','pill learn','\ud83d\udcd6 '+ci.tale.title));
+  if(isFirst&&ci.tale.intro){const sc=el('div',null,ci.tale.intro);sc.style.cssText='font-size:15px;font-style:italic;margin:8px 6px;color:#555;line-height:1.4';card.appendChild(sc);}
+  card.appendChild(el('h2',null,ci.ch.title));
+  const beat=el('div',null,ci.ch.beat);beat.style.cssText='font-size:17px;margin:10px 6px;line-height:1.45';card.appendChild(beat);
+  card.appendChild(el('div','small muted','\ud83c\udfaf '+ci.tale.goal));
+  const row=el('div','row');row.style.cssText='justify-content:center;gap:10px;margin-top:14px';
+  const sb=el('button','speak','\ud83d\udd0a');sb.title='Ouvir de novo';sb.onclick=()=>speak(say);row.appendChild(sb);
+  const go=el('button','big-btn','Come\u00e7ar!');go.onclick=()=>startSession(E.buildMission(S,now(),skill.skill_id));row.appendChild(go);
+  card.appendChild(row);
+  wrap.appendChild(card);view.appendChild(wrap);
+  if(autoPlaysPrompt())speak(say); // narra só p/ pré-leitor/leitor inicial; o mais velho lê e usa 🔊 se quiser
 }
 function childDesc(s){
   const d=s.description;return d.length>64?d.slice(0,62)+'…':d;
@@ -335,20 +369,27 @@ function endSession(showStars){
   const rec=S.sessions[S.sessions.length-1];if(rec){rec.ended_at=now();rec.items_completed=runner.answeredCount;}
   if(showStars&&runner.kind!=='placement'){
     const st=E.sessionStars(runner.events,runner.answeredCount,runner.sess.items.length);
+    const _starsBefore=S.stars;
     S.stars+=st.stars;S.starLog.push({ts:now(),stars:st.stars,why:st.why});
+    const crossed=E.tierCrossed(_starsBefore,S.stars);
     const selos=runner.selosGanhos.slice();
     const treasureChanges=E.evaluateTreasures(S,now());
-    runner=null;save();renderStars(st,selos,treasureChanges);return;
+    runner=null;save();renderStars(st,selos,treasureChanges,crossed);return;
   }
   runner=null;save();render();
 }
-function renderStars(st,selos,treasureChanges){
+function renderStars(st,selos,treasureChanges,crossed){
   clear(view);const wrap=el('div','child-wrap');
   const c=el('div','mission-card celebrate');
   c.appendChild(el('div',null,'<div style="font-size:52px">🎉</div>'));
   c.appendChild(el('h2',null,'Missão concluída!'));
   c.appendChild(el('div','stars-big',starHtml(st.stars)));
   st.why.forEach(w=>c.appendChild(el('div','small muted','✓ '+w)));
+  const _rt=E.rewardTiers(S);
+  if(crossed){const _nm={safira:'uma safira 🔷',diamante:'um diamante 💎',coroa:'uma coroa 👑'}[crossed];
+    const _tp=el('div',null,'✨ Você ganhou '+_nm+'!');_tp.style.cssText='font-size:20px;font-weight:800;margin:8px 0;color:#2a6ad1';c.appendChild(_tp);}
+  const _rl=el('div',null,rewardLadderStr(_rt));_rl.style.cssText='font-size:22px;margin-top:6px';c.appendChild(_rl);
+  c.appendChild(el('div','small muted','Faltam '+_rt.toNextSafira+' ⭐ para a próxima safira 🔷'));
   if(selos.length){
     c.appendChild(el('h3',null,'Novos selos!'));
     selos.forEach(sk=>{const s=E.skillById(sk);c.appendChild(el('span','selo'+(S.selos.find(x=>x.skill_id===sk&&x.gold)?' gold':''),'🏅 '+AXMETA[s.axis_id].nm));});
@@ -357,7 +398,8 @@ function renderStars(st,selos,treasureChanges){
   const b=el('button','big-btn'+(hasT?' cofre-btn':''),hasT?'🎁 Abrir o baú!':'Voltar ao início');b.style.marginTop='14px';
   b.onclick=hasT?(()=>renderTreasureReveal(treasureChanges)):render;c.appendChild(b);
   wrap.appendChild(c);view.appendChild(wrap);
-  speak(st.stars>=3?'Uau! Três estrelas!':(st.stars>=1?'Muito bem! Missão concluída!':'Missão concluída!'));
+  const _msg=crossed?('Você ganhou '+({safira:'uma safira!',diamante:'um diamante!',coroa:'uma coroa!'}[crossed])):(st.stars>=3?'Uau! Três estrelas!':(st.stars>=1?'Muito bem! Missão concluída!':'Missão concluída!'));
+  speak(_msg);
 }
 function treasureCatalogItem(tid){return ((window.APP_DATA&&window.APP_DATA.treasures)||[]).find(t=>t.id===tid)||null;}
 function renderTreasureReveal(changes){
