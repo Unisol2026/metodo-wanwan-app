@@ -1,0 +1,14 @@
+{
+  "name": "Método Wanwan — Matemática 5–12",
+  "short_name": "Wanwan Mat",
+  "description": "Tutoria adaptativa de matemática por domínio de habilidade (protótipo).",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6fb",
+  "theme_color": "#5b7cfa",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
