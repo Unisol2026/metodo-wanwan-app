@@ -87,13 +87,15 @@ function render(){
   else if(S.surface==='parent')renderParent();
   else renderAdmin();
 }
+document.getElementById('lockBtn').addEventListener('click',()=>{
+  // cadeado agora fica FORA da pílula .seg (para não parecer "Criança trancada"):
+  // handler próprio, mesmo efeito de antes (revela Responsável/Admin via PIN, sem trocar de superfície).
+  if(gateParentAccess())parentUnlocked=true;
+  render();
+});
 document.getElementById('surfaceSeg').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   const target=b.dataset.s;
-  if(target==='lock'){
-    if(gateParentAccess())parentUnlocked=true;
-    render();return;
-  }
   if(S.surface==='child'&&(target==='parent'||target==='admin')&&!parentUnlocked){
     if(!gateParentAccess())return;
     parentUnlocked=true;
@@ -158,7 +160,7 @@ function renderChild(){
   mc.appendChild(el('h2',null,'Missão do dia'));
   mc.appendChild(el('div','muted small','Atividades escolhidas só para você — com revisão do que você já conquistou.'));
   const b=el('button','big-btn','Começar missão');b.style.marginTop='12px';
-  b.onclick=()=>startSession(E.buildMission(S,now()));mc.appendChild(b);
+  b.onclick=startDailyMission;mc.appendChild(b);
   const b2=el('button','big-btn alt','🎮 Jogos');b2.style.marginTop='10px';b2.onclick=renderGames;mc.appendChild(b2);
   wrap.appendChild(mc);
   const cst0=E.collectionStatus(S);
@@ -269,12 +271,23 @@ function startMission(skill){
   if(!ci){startSession(E.buildMission(S,now(),skill.skill_id));return;} // sem conto: começa direto
   renderMissionIntro(skill,ci);
 }
-function renderMissionIntro(skill,ci){
+// Missão do dia (botão da home): também abre com a cena do conto. Antes chamava
+// startSession direto e a criança nunca via a introdução (bug 08/07/2026). Usa o FOCO
+// da missão já construída p/ achar o capítulo, e inicia ESSA missão (sem rebuild).
+function startDailyMission(){
+  const mis=E.buildMission(S,now());
+  const foc=mis&&mis.focus?E.skillById(mis.focus):null;
+  const ci=foc?chapterFor(foc):null;
+  if(!ci){startSession(mis);return;} // sem conto/sem foco: começa direto
+  renderMissionIntro(foc,ci,{session:mis,onBack:()=>render()});
+}
+function renderMissionIntro(skill,ci,opts){
+  opts=opts||{};
   clear(view);const wrap=el('div','child-wrap');
   const meta=AXMETA[skill.axis_id];
   const isFirst=!!(ci.tale.chapters&&ci.tale.chapters[0]&&ci.tale.chapters[0].id===ci.ch.id);
   const say=(isFirst&&ci.tale.intro?ci.tale.intro+' ':'')+ci.ch.beat; // 1ª missão da ilha: abre com a cena do conto
-  const back=el('button','btn ghost','\u2190 Voltar');back.onclick=()=>renderTrail(skill.axis_id);wrap.appendChild(back);
+  const back=el('button','btn ghost','\u2190 Voltar');back.onclick=opts.onBack||(()=>renderTrail(skill.axis_id));wrap.appendChild(back);
   const card=el('div','mission-card');card.style.textAlign='center';
   card.appendChild(el('div',null,'<div style="font-size:52px">'+(meta&&meta.ic||'\ud83d\udcd6')+'</div>'));
   card.appendChild(el('div','pill learn','\ud83d\udcd6 '+ci.tale.title));
@@ -284,7 +297,7 @@ function renderMissionIntro(skill,ci){
   card.appendChild(el('div','small muted','\ud83c\udfaf '+ci.tale.goal));
   const row=el('div','row');row.style.cssText='justify-content:center;gap:10px;margin-top:14px';
   const sb=el('button','speak','\ud83d\udd0a');sb.title='Ouvir de novo';sb.onclick=()=>speak(say);row.appendChild(sb);
-  const go=el('button','big-btn','Come\u00e7ar!');go.onclick=()=>startSession(E.buildMission(S,now(),skill.skill_id));row.appendChild(go);
+  const go=el('button','big-btn','Come\u00e7ar!');go.onclick=()=>startSession(opts.session||E.buildMission(S,now(),skill.skill_id));row.appendChild(go);
   card.appendChild(row);
   wrap.appendChild(card);view.appendChild(wrap);
   if(autoPlaysPrompt())speak(say); // narra só p/ pré-leitor/leitor inicial; o mais velho lê e usa 🔊 se quiser
@@ -362,13 +375,13 @@ function startSession(sess){
   if(!sess.items.length){alert('Sem itens disponíveis aqui ainda.');return;}
   const rec={session_id:'s'+(S.sessions.length+1),child_id:S.child.child_id,kind:sess.kind,mode:S.mode,started_at:now(),items_planned:sess.items.length,items_completed:0};
   S.sessions.push(rec);
-  runner={kind:sess.kind,sess,idx:0,answered:false,events:[],selosGanhos:[],answeredCount:0,step:null,sessionId:rec.session_id};
+  runner={kind:sess.kind,sess,idx:0,answered:false,events:[],selosGanhos:[],answeredCount:0,mistakes:0,step:null,sessionId:rec.session_id};
   save();renderRunnerStep();
 }
 function endSession(showStars){
   const rec=S.sessions[S.sessions.length-1];if(rec){rec.ended_at=now();rec.items_completed=runner.answeredCount;}
   if(showStars&&runner.kind!=='placement'){
-    const st=E.sessionStars(runner.events,runner.answeredCount,runner.sess.items.length);
+    const st=E.sessionStars(runner.events,runner.answeredCount,runner.sess.items.length,runner.mistakes);
     const _starsBefore=S.stars;
     S.stars+=st.stars;S.starLog.push({ts:now(),stars:st.stars,why:st.why});
     const crossed=E.tierCrossed(_starsBefore,S.stars);
@@ -542,6 +555,7 @@ function onAnswer(item,res,fbHost,navHost,stage){
     E.recordPlacement(S,item,final,now(),runner.sessionId);
   }else{
     out=E.recordAttempt(S,item,final,now(),runner.sess.items[runner.idx].rec_type||'mission',runner.sessionId);
+    if(final.attempt>1)runner.mistakes++; // 3ª estrela (missão limpa): tropeço = não acertou de primeira
     runner.events.push(...out.evts);
     out.evts.filter(e=>e==='selo').forEach(()=>runner.selosGanhos.push(item.skill_id));
   }

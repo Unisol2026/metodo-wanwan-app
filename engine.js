@@ -567,11 +567,18 @@ function buildMission(S,nowTs,preferSkill){
   return {kind:'mission',mode:S.mode,items:plan.slice(0,P.MISSION_LEN),focus:fsk};
 }
 /* ---------- estrelas da sessão (§10) ---------- */
-function sessionStars(sessionEvents,itemsAnswered,total){
+function sessionStars(sessionEvents,itemsAnswered,total,mistakes){
   let s=0;const why=[];
-  if(itemsAnswered>=Math.min(3,total)){s++;why.push('Completou a missão');}
+  const completed=itemsAnswered>=Math.min(3,total);
+  if(completed){s++;why.push('Completou a missão');}
   if(sessionEvents.some(e=>e==='level_up'||e==='new_format'||e==='selo')){s++;why.push('Evidência nova');}
-  if(sessionEvents.some(e=>e==='explain_clear')){s++;why.push('Explicou com clareza');}
+  /* 3ª estrela — modelo HÍBRIDO (08/07/2026, decisão do Wanderson). "Missão limpa": no máximo
+     1 tropeço. Erro NUNCA remove as duas primeiras estrelas (§10: "erro é dado, não punição") e
+     velocidade NUNCA conta (regra 7) — a 3ª é bônus de capricho por acertar, não medida de
+     proficiência (essa segue só nas camadas N/EE). Alcançável no modo sozinho: corrige o beco em
+     que a antiga 3ª estrela ("força de explicação", f=1,0) era impossível solo (C-09). Requer a
+     contagem de erros da sessão; se não vier (chamador legado), a 3ª estrela não é concedida. */
+  if(completed&&typeof mistakes==='number'&&mistakes<=1){s++;why.push(mistakes===0?'Missão sem erros':'Missão quase perfeita');}
   return {stars:s,why};
 }
 /* ---------- tesouros e coleção (camada narrativa; ver design_brief_narrativa_e_tesouros.md) ----------

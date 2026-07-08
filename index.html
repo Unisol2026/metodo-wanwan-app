@@ -42,6 +42,9 @@ h1,h2,h3{margin:0 0 .4em;font-family:var(--font-display);font-weight:600}
 .seg{display:flex;background:var(--surface2);border-radius:12px;padding:3px;border:1px solid var(--line)}
 .seg button{padding:9px 13px;border-radius:9px;color:var(--muted);font-weight:700;font-size:13px}
 .seg button.on{background:var(--brand);color:#fff}
+.segwrap{display:flex;align-items:center;gap:8px}
+.lockbtn{padding:9px 12px;border-radius:12px;background:var(--surface2);color:var(--muted);font-weight:700;font-size:13px;border:1px solid var(--line)}
+.lockbtn:active{transform:scale(.96)}
 .who{font-size:12px;color:var(--muted);padding:0 8px}
 
 .view{padding:16px;flex:1}
@@ -197,11 +200,13 @@ summary{cursor:pointer;font-weight:700}
       <button data-mode="with_adult">✋ com adulto</button>
       <button data-mode="solo" class="on">sozinho</button>
     </div>
-    <div class="seg" id="surfaceSeg">
-      <button data-s="child" class="on">Criança</button>
-      <button data-s="parent">Responsável</button>
-      <button data-s="admin">Admin</button>
-      <button data-s="lock" id="lockBtn" title="Área do responsável">🔒</button>
+    <div class="segwrap">
+      <div class="seg" id="surfaceSeg">
+        <button data-s="child" class="on">Criança</button>
+        <button data-s="parent">Responsável</button>
+        <button data-s="admin">Admin</button>
+      </div>
+      <button id="lockBtn" class="lockbtn" title="Área do responsável">🔒</button>
     </div>
   </div>
   <div class="view" id="view"></div>
