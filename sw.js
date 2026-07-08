@@ -5,7 +5,7 @@
    Sem rede a terceiros — coerente com a minimização LGPD do projeto. */
 'use strict';
 
-const CACHE_VERSION = 'wanwan-v0.4.0';
+const CACHE_VERSION = 'wanwan-v0.4.2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const APP_SHELL = [
   './app-data.js',
   './engine.js',
   './app.js',
+  './sw-register.js',
   './icon.svg',
   './assets/fonts/fredoka-400.woff2',
   './assets/fonts/fredoka-500.woff2',
@@ -67,7 +68,4 @@ self.addEventListener('fetch', (event) => {
         // Offline e não cacheado: para navegações, cai no index (SPA shell).
         if (req.mode === 'navigate') return caches.match('./index.html');
         return Response.error();
-      });
-    })
-  );
-});
+    

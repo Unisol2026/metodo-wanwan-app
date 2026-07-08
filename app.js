@@ -129,6 +129,7 @@ document.getElementById('modeToggle').addEventListener('click',e=>{
 /* ============================================ CRIANÇA */
 function renderChild(){
   if(runner){renderRunnerStep();return;}
+  if(!E.hasConsent(S)){renderConsent();return;}
   if(!S.onboarded){renderOnboarding();return;}
   const wrap=el('div','child-wrap');
   const head=el('div','row');head.style.alignItems='center';head.style.justifyContent='space-between';
@@ -771,6 +772,20 @@ function renderParent(){
   };
   cSec.appendChild(pinBtn);
   view.appendChild(cSec);
+
+  const cP=el('div','card');
+  cP.appendChild(el('h3',null,'Privacidade e dados (LGPD)'));
+  const cc=E.currentConsent(S), st=S.child.consent_status;
+  const stLabel=st==='granted'?'concedido':st==='withdrawn'?'revogado':'pendente';
+  cP.appendChild(el('div','muted small','Consentimento: <b>'+stLabel+'</b>'+(cc?(' · versão '+cc.terms_version+' · '+new Date(cc.created_at).toLocaleDateString('pt-BR')+' · escopo: '+((cc.scope||[]).join(', ')||'—')):'')));
+  cP.appendChild(el('div','muted small','Base legal: consentimento do responsável (LGPD Art. 14, §1º). Dados guardados só neste navegador, sem servidor.'));
+  const rowL=el('div','row');rowL.style.marginTop='8px';
+  const bExp=el('button','btn ghost','⬇ Exportar dados (JSON)');bExp.onclick=downloadExport;
+  const bRev=el('button','btn ghost','⏸ Revogar consentimento');bRev.onclick=revokeConsent;
+  const bDel=el('button','btn ghost','🗑 Excluir todos os dados');bDel.onclick=wipeAllData;
+  rowL.append(bExp,bRev,bDel);cP.appendChild(rowL);
+  cP.appendChild(el('div','note','“Exportar” baixa um arquivo com o progresso e as respostas (portabilidade, Art. 18). “Revogar” interrompe o uso até um novo consentimento, mantendo o registro da revogação como prova. “Excluir” apaga tudo deste navegador, sem volta.'));
+  view.appendChild(cP);
 }
 function nextStep(s,m){
   if(m.status==='review_needed')return 'Revisão espaçada nesta semana.';
@@ -845,6 +860,78 @@ function renderAdmin(){
     }
   }catch(e){}
 })();
+/* ============================================ CONSENTIMENTO (LGPD Art. 14) — tela do responsavel */
+function renderConsent(){
+  clear(view);
+  const wrap=el('div','child-wrap');
+  const c=el('div','card');c.style.textAlign='left';
+  c.appendChild(el('div',null,'<div style="font-size:42px;text-align:center">🛡️</div>'));
+  c.appendChild(el('h2',null,'Consentimento do responsável'));
+  c.appendChild(el('div','muted small','Esta etapa é para o pai, a mãe ou o responsável legal — não para a criança. O Método Wanwan trata dados de uma criança e, pela LGPD (Lei 13.709/2018, Art. 14, §1º), isso exige o consentimento específico e em destaque de um responsável legal.'));
+  const t=el('div','note');t.style.marginTop='12px';
+  t.innerHTML='<b>O que este app guarda</b><br>'+
+    '• Apelido (sugerimos um apelido, não o nome real), faixa de idade e perfil de leitura.<br>'+
+    '• O progresso na matemática: nível por habilidade, respostas e erros das atividades.<br>'+
+    '<b>O que este app NUNCA coleta</b><br>'+
+    '• Nome completo, data de nascimento exata, foto, endereço, escola ou localização.<br>'+
+    '• A voz da criança — o microfone nunca é usado.<br>'+
+    '<b>Onde os dados ficam</b><br>'+
+    '• Somente neste navegador, neste aparelho. Não há servidor: nada é enviado pela internet.<br>'+
+    '<b>Seus direitos (LGPD Art. 18)</b><br>'+
+    '• No Painel do Responsável você pode, quando quiser, revogar este consentimento, exportar todos os dados (arquivo JSON) ou excluí-los por completo.';
+  c.appendChild(t);
+  const sc=el('div');sc.style.margin='14px 0';
+  sc.appendChild(el('div','small','<b>Autorizo o tratamento de:</b>'));
+  const mk=(id,label,desc,checked,disabled)=>{
+    const row=el('label','row');row.style.cssText='align-items:flex-start;gap:8px;margin:8px 0;cursor:pointer';
+    const cb=el('input');cb.type='checkbox';cb.id=id;cb.checked=checked;if(disabled)cb.disabled=true;
+    row.append(cb,el('div','small','<b>'+label+'</b><br><span class="muted">'+desc+'</span>'));return row;
+  };
+  sc.appendChild(mk('sc_ped','Progresso pedagógico','Nível por habilidade e histórico de atividades — é o que permite o app ensinar de forma adaptada. Necessário para o app funcionar.',true,true));
+  sc.appendChild(mk('sc_tel','Telemetria de uso','Estatísticas de uso (tempo e sessões) para acompanhar a evolução. Opcional.',true,false));
+  c.appendChild(sc);
+  const conf=el('label','row');conf.style.cssText='align-items:flex-start;gap:8px;margin:10px 0;cursor:pointer';
+  const cbR=el('input');cbR.type='checkbox';cbR.id='sc_resp';
+  conf.append(cbR,el('div','small','<b>Declaro que sou o pai, a mãe ou o responsável legal desta criança</b> e que li e concordo com as informações acima (versão dos termos: '+E.TERMS_VERSION+').'));
+  c.appendChild(conf);
+  const btn=el('button','big-btn','Concordar e liberar o app');btn.style.marginTop='6px';
+  btn.onclick=()=>{
+    if(!cbR.checked){alert('Para continuar, confirme que você é o responsável legal desta criança.');return;}
+    const scope=[];
+    if(document.getElementById('sc_ped').checked)scope.push('progresso_pedagogico');
+    if(document.getElementById('sc_tel').checked)scope.push('telemetria_uso');
+    E.recordConsent(S,'grant',scope,(typeof navigator!=='undefined'&&navigator.userAgent)||null);
+    save();render();
+  };
+  c.appendChild(btn);
+  c.appendChild(el('div','muted small','Sem este consentimento, a criança não pode usar o app. Este aviso não substitui revisão jurídica para uso comercial.'));
+  wrap.appendChild(c);view.appendChild(wrap);
+}
+function downloadExport(){
+  try{
+    const data=E.exportData(S);
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='wanwan_dados_'+((S.child.nickname||'crianca').replace(/[^\w-]+/g,'_'))+'_'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>{try{URL.revokeObjectURL(url);}catch(e){}},1500);
+  }catch(e){alert('Não consegui gerar o arquivo de exportação neste navegador.');}
+}
+function revokeConsent(){
+  if(!confirm('Revogar o consentimento? A criança não poderá continuar usando o app até que um novo consentimento seja concedido. O registro da revogação é mantido como prova de conformidade (LGPD).'))return;
+  E.recordConsent(S,'withdraw',[],(typeof navigator!=='undefined'&&navigator.userAgent)||null);
+  save();parentUnlocked=false;S.surface='child';render();
+  alert('Consentimento revogado. O app ficará bloqueado até um novo consentimento.');
+}
+function wipeAllData(){
+  if(!confirm('Excluir TODOS os dados desta criança e do responsável guardados neste navegador (progresso, respostas, PIN e registro de consentimento)? Esta ação não pode ser desfeita.'))return;
+  try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY);}catch(e){}
+  S=ensurePin(E.newState());S.parentPin=null;save();
+  parentUnlocked=false;
+  alert('Dados excluídos. O app vai recomeçar do zero.');
+  boot();
+}
 function renderFirstRunPinSetup(){
   clear(view);
   const wrap=el('div','child-wrap');

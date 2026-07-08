@@ -35,14 +35,14 @@ function genId(prefix){return prefix+'_'+Math.random().toString(36).slice(2,8)+D
 function newState(){
   const gid=genId('gua'), cid=genId('chi'), now=Date.now();
   const child={child_id:cid,nickname:'Sofia',age_band:null,reading_profile:null,avatar:null,
-    consent_status:'granted',active:true,created_at:now};
+    consent_status:'pending',active:true,created_at:now};
   return {v:3,devDayOffset:0,mode:'solo',surface:'child',
     guardian:{guardian_id:gid,auth_email:null,locale:'pt-BR',status:'active',created_at:now},
     children:[child],child:child,activeChildId:cid,
     onboarded:false,
     mastery:{},attempts:[],attemptSeq:0,attemptsTotal:0,sessions:[],remediationQueue:[],
     placement:{part:0,axisIdx:0,ladder:null,finished:false,seeded:[],lastSessionBoundary:false},
-    stars:0,selos:[],starLog:[],collection:{owned:{}}};
+    stars:0,selos:[],starLog:[],collection:{owned:{}},consents:[]};
 }
 /* migração idempotente do estado local (design em modelo_dados_lgpd.md §6): v2 (1 criança fixa 'c1')
    -> v3 (guardian + children[]); remapeia as chaves de mastery e tageia attempts/sessions com child_id.
@@ -51,7 +51,7 @@ function migrateState(raw){
   if(!raw||typeof raw!=='object')return newState();
   if(raw.v===3){
     if(!Array.isArray(raw.children)||!raw.children.length){
-      const c=raw.child||{child_id:genId('chi'),nickname:'Sofia',age_band:null,reading_profile:null,avatar:null,consent_status:'granted',active:true,created_at:Date.now()};
+      const c=raw.child||{child_id:genId('chi'),nickname:'Sofia',age_band:null,reading_profile:null,avatar:null,consent_status:'pending',active:true,created_at:Date.now()};
       raw.children=[c];
     }
     if(!raw.guardian)raw.guardian={guardian_id:genId('gua'),auth_email:null,locale:'pt-BR',status:'active',created_at:Date.now()};
@@ -61,11 +61,12 @@ function migrateState(raw){
     raw.child=raw.children.find(c=>c.child_id===raw.activeChildId)||raw.children[0];
     if(!raw.collection||typeof raw.collection!=='object')raw.collection={owned:{}};
     if(!raw.collection.owned)raw.collection.owned={};
+    if(!Array.isArray(raw.consents))raw.consents=[];
     return raw;
   }
   if(raw.v===2){
     const newId=genId('chi');
-    const child=Object.assign({},raw.child,{child_id:newId,avatar:null,consent_status:'granted',active:true,created_at:Date.now()});
+    const child=Object.assign({},raw.child,{child_id:newId,avatar:null,consent_status:'pending',active:true,created_at:Date.now()});
     const mastery={};
     Object.keys(raw.mastery||{}).forEach(k=>{const i=k.indexOf('::');mastery[newId+'::'+(i>=0?k.slice(i+2):k)]=raw.mastery[k];});
     const attempts=(raw.attempts||[]).map(a=>Object.assign({child_id:newId},a));
@@ -73,7 +74,7 @@ function migrateState(raw){
     return Object.assign({},raw,{v:3,
       guardian:{guardian_id:genId('gua'),auth_email:null,locale:'pt-BR',status:'active',created_at:Date.now()},
       children:[child],child:child,activeChildId:newId,mastery,attempts,sessions,
-      attemptSeq:attempts.length,attemptsTotal:attempts.length,collection:{owned:{}}});
+      attemptSeq:attempts.length,attemptsTotal:attempts.length,collection:{owned:{}},consents:[]});
   }
   return newState();
 }
@@ -646,11 +647,46 @@ function tierCrossed(before,after){
   if(Math.floor(after/10)>Math.floor(before/10))return 'safira';
   return null;
 }
+/* ---------- consentimento (LGPD Art. 14) — escopo (a): completo client-side, local-only ----------
+   Registro append-only de consentimento do responsavel; consent_status da crianca deriva do ultimo registro.
+   Sem backend/e-mail: evidencia carimba data ISO + user_agent (sem IP; nao ha servidor p/ ip_hash). */
+var TERMS_VERSION='2026-07-08';
+var CONSENT_SCOPES=['progresso_pedagogico','telemetria_uso'];
+function recordConsent(S,action,scope,ua){
+  if(!Array.isArray(S.consents))S.consents=[];
+  var rec={consent_id:genId('con'),guardian_id:(S.guardian&&S.guardian.guardian_id)||null,
+    child_id:S.child.child_id,action:action,
+    scope:Array.isArray(scope)?scope.slice():CONSENT_SCOPES.slice(),
+    terms_version:TERMS_VERSION,method:'painel',
+    evidence:{at:new Date().toISOString(),user_agent:ua||null},created_at:Date.now()};
+  S.consents.push(rec);
+  S.child.consent_status=(action==='withdraw')?'withdrawn':'granted';
+  return rec;
+}
+function hasConsent(S){return !!(S&&S.child&&S.child.consent_status==='granted');}
+function currentConsent(S){
+  if(!S||!Array.isArray(S.consents)||!S.consents.length)return null;
+  var cid=S.child.child_id;
+  for(var i=S.consents.length-1;i>=0;i--)if(S.consents[i].child_id===cid)return S.consents[i];
+  return null;
+}
+function exportData(S){
+  var cid=S.child.child_id, mastery={};
+  Object.keys(S.mastery||{}).forEach(function(k){if(k.indexOf(cid+'::')===0)mastery[k]=S.mastery[k];});
+  return {_schema:'wanwan-export/v1',exported_at:new Date().toISOString(),terms_version:TERMS_VERSION,
+    guardian:S.guardian,child:S.child,
+    consents:(S.consents||[]).filter(function(c){return c.child_id===cid;}),
+    mastery:mastery,
+    attempts:(S.attempts||[]).filter(function(a){return a.child_id===cid;}),
+    sessions:(S.sessions||[]).filter(function(s){return s.child_id===cid;}),
+    placement:S.placement,stars:S.stars,selos:S.selos,collection:S.collection};
+}
 const api={init,newState,migrateState,addChild,setActiveChild,mastery,computeEE,recordAttempt,levelCandidate,confidence,confidenceCore,decayed,n4Confirmed,confirmSeededAncestors,entryIndex,unstable,AR,pruneWindow,pruneAttempts,
   evaluateTreasures,collectionStatus,rarityForChapter,chapterComplete,taleOf,treasureChapter,
   coveredFormats,unlocked,axisProgress,buildMission,focusSkill,pickItem,playableOrder,
   nextPlacementItem,recordPlacement,placementAxis,sessionAxisGroups,markReviews,scheduleReview,sessionStars,rewardTiers,tierCrossed,
   prereqsOf,LEVELS,FORMATS,P,li,
+  recordConsent,hasConsent,currentConsent,exportData,TERMS_VERSION,CONSENT_SCOPES,
   skills:()=>D.skills,items:()=>D.items,skillById:id=>skillById[id],itemsBySkill:id=>itemsBySkill[id]||[],
   playable:()=>PLAYABLE,axisSkills:id=>axisSkills[id]||[]};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
