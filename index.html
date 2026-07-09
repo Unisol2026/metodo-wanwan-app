@@ -194,6 +194,33 @@ summary{cursor:pointer;font-weight:700}
 .chest{font-size:70px;animation:chestpop .8s ease}
 @keyframes chestpop{0%{transform:scale(.3) rotate(-8deg);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1)}}
 .reveal-treasure{animation:pop .7s ease}
+
+/* ===== FATIA VERTICAL — tema "João e o Pé de Feijão" (SNC / axis 1) ===== */
+.box3d{position:relative;border-radius:18px}
+.prompt.box3d{background:linear-gradient(160deg,#FFF7E6,#FFE7C2);color:#5A3B08;border:2px solid #F1C889;
+  padding:14px 16px;box-shadow:0 6px 0 #E8B25A,0 12px 20px rgba(200,140,20,.18)}
+.feedback.box3d{border-radius:16px}
+.feedback.box3d.ok{box-shadow:0 5px 0 #7EC79B,0 10px 18px rgba(47,158,94,.16)}
+.feedback.box3d.no{box-shadow:0 5px 0 #E7A9A0,0 10px 18px rgba(193,73,59,.16)}
+.snc-hero{position:relative;border-radius:20px;overflow:hidden;padding:16px 18px;margin:10px 0;min-height:150px;
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.55)),url('assets/img/fundo-mapa.jpg') center/cover;
+  border:2px solid #BFE0DB}
+.snc-hero h3{color:#1C6F66;text-shadow:0 1px 0 #fff;margin-bottom:4px}
+.snc-hero .goal{color:#37312B;font-weight:700;background:rgba(255,255,255,.72);display:inline-block;
+  padding:5px 11px;border-radius:999px;font-size:13px;margin-top:6px}
+.snc-hero .prog{color:#1C6F66;font-weight:700;background:rgba(255,255,255,.66);display:inline-block;
+  padding:3px 9px;border-radius:999px;font-size:12px;margin-top:8px}
+.snc-hero .joao{position:absolute;right:6px;bottom:0;width:78px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+.island.isl-snc{background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,.85)),
+  url('assets/img/fundo-mapa.jpg') center/cover;border-color:#BFE0DB}
+.scene-stage{position:relative;border-radius:18px;overflow:hidden;height:230px;margin:6px 0 12px;
+  background:url('assets/img/cena-cap1.jpg') center 72%/cover;border:2px solid #CDE5C9;
+  box-shadow:inset 0 -46px 42px -22px rgba(0,0,0,.16)}
+.reveal-line{opacity:0;animation:revIn .55s ease forwards}
+.reveal-line.d1{animation-delay:.10s}.reveal-line.d2{animation-delay:.65s}.reveal-line.d3{animation-delay:1.15s}
+@keyframes revIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.art-chest{width:150px;height:auto;animation:chestpop .8s ease}
+.art-treasure{width:132px;height:auto;animation:pop .7s ease;display:block;margin:2px auto}
 </style>
 </head>
 <body>

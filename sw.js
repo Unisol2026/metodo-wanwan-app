@@ -5,7 +5,7 @@
    Sem rede a terceiros — coerente com a minimização LGPD do projeto. */
 'use strict';
 
-const CACHE_VERSION = 'wanwan-v0.4.2';
+const CACHE_VERSION = 'wanwan-v0.5.0';
 const APP_SHELL = [
   './',
   './index.html',
@@ -13,7 +13,6 @@ const APP_SHELL = [
   './app-data.js',
   './engine.js',
   './app.js',
-  './sw-register.js',
   './icon.svg',
   './assets/fonts/fredoka-400.woff2',
   './assets/fonts/fredoka-500.woff2',
@@ -22,7 +21,13 @@ const APP_SHELL = [
   './assets/fonts/nunito-400.woff2',
   './assets/fonts/nunito-600.woff2',
   './assets/fonts/nunito-700.woff2',
-  './assets/fonts/nunito-800.woff2'
+  './assets/fonts/nunito-800.woff2',
+  './assets/img/fundo-mapa.jpg',
+  './assets/img/cena-cap1.jpg',
+  './assets/img/joao.png',
+  './assets/img/gema.png',
+  './assets/img/bau.png',
+  './assets/img/trofeu.png'
 ];
 
 // Instala: precache do shell. addAll é atômico (se 1 falhar, install falha).
@@ -68,4 +73,7 @@ self.addEventListener('fetch', (event) => {
         // Offline e não cacheado: para navegações, cai no index (SPA shell).
         if (req.mode === 'navigate') return caches.match('./index.html');
         return Response.error();
-    
+      });
+    })
+  );
+});

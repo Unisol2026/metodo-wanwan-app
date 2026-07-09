@@ -8,6 +8,10 @@ const E=window.Wanwan; E.init(window.APP_DATA);
 const LEVELS=E.LEVELS, FORMATS=E.FORMATS, li=E.li, DAY=86400000;
 const FMT_LABEL={DIRECT:'Direta',REPR:'Representação',PROBLEM:'Problema',EXPLAIN:'Explicação',VARIATION:'Variação'};
 const RARITY_META={comum:{nm:'Comum',em:'🤍',cls:'r-comum'},raro:{nm:'Raro',em:'💙',cls:'r-raro'},epico:{nm:'Épico',em:'💜',cls:'r-epico'},lendario:{nm:'Lendário',em:'💛',cls:'r-lendario'}};
+/* fatia vertical: tema Pé de Feijão (SNC/axis 1) */
+const BEANSTALK_AXIS=1;
+const TREASURE_ART={'SNC-GEM-1':'gema.png','SNC-TROPHY':'trofeu.png'};
+function bsImg(f){return 'assets/img/'+f;}
 const AXMETA={1:{ic:'🔢',nm:'Contagem'},2:{ic:'🧩',nm:'Partes e Todo'},3:{ic:'🧱',nm:'Dezenas'},
  4:{ic:'➕',nm:'Somar e Subtrair'},5:{ic:'✖️',nm:'Multiplicar'},6:{ic:'➗',nm:'Dividir'},
  7:{ic:'🍕',nm:'Frações'},8:{ic:'🔷',nm:'Formas'},9:{ic:'⏰',nm:'Medidas e Dinheiro'},
@@ -47,13 +51,24 @@ function rewardLadderStr(rt){var p=[];if(rt.coroas)p.push('👑 '+rt.coroas);if(
    Autoplay por reading_profile: pré-leitor e leitor inicial ouvem tudo automaticamente;
    leitor pleno só sob demanda no 🔊 (decisão da 12ª sessão: "por criança, sem recorte por nível").
    Convenção p/ geração em massa: dropar o MP3 em assets/audio/<item_id>.mp3 e setar item.audio="<item_id>.mp3". */
+/* ==== voz Chirp3-HD (fatia Pé de Feijão): manifesto texto->arquivo. MP3 se houver, senão TTS. ==== */
+const AUDIO_MANIFEST={"Quantos pontos você vê? (sem contar um por um)":"v0187d884d5eb819d.mp3","Isso! Você reconheceu 4 num olhar só.":"v7a19214f453c4486.mp3","Olhe o formato: dois em cima e dois embaixo. Isso é 4.":"v5a839b76bf56fae4.mp3","Vamos ver juntos: Isso! Você reconheceu 4 num olhar só.":"vd1185bf5c92cd278.mp3","Mostre 3 no quadro de dez.":"v67952313530c6ad8.mp3","Isso! Você montou 3.":"vb02a995b8be837c8.mp3","Conte de novo: coloque uma ficha para cada, até 3.":"vb067fe474e0fe77f.mp3","Vamos ver juntos: Isso! Você montou 3.":"v33651cd939a2b59f.mp3","Na folha havia joaninhas. Quantas você vê de uma vez?":"v08da12f9be584bcc.mp3","Isso! São 5, como no dado.":"vfab894181ca816b4.mp3","É o formato do 5 no dado: 4 nos cantos e 1 no meio.":"vcc8f2fc97c0e66e9.mp3","Vamos ver juntos: Isso! São 5, como no dado.":"vcacba60b15c2f8ff.mp3","Por que são 4? Escolha os jeitos que mostram o 4 em partes.":"vde0d8e533391c9f2.mp3","Muito bem! Você mostrou 4 como partes juntas.":"v940072a93309c2a8.mp3","Tente ver 4 como partes: 2 e 2, ou 3 e 1.":"v59d5de89284bde34.mp3","Vamos ver juntos: Muito bem! Você mostrou 4 como partes juntas.":"v07d88b16f3bf3b98.mp3","E agora, quantos pontos?":"v160dd0ec178f72f3.mp3","Isso! 3, mesmo em fila.":"v27611f3e27dd1838.mp3","São 3, não importa o arranjo.":"v0aae7ec6ac95270a.mp3","Vamos ver juntos: Isso! 3, mesmo em fila.":"v9a5a179490efc434.mp3","Qual número vem depois do 6?":"va8fe477462a0b817.mp3","Isso! Depois do 6 vem o 7.":"v0cbc8dbde164c989.mp3","Conte devagar: 5, 6, 7. Depois do 6 vem o 7.":"vd946197a6a62d731.mp3","Vamos ver juntos: Isso! Depois do 6 vem o 7.":"vb070b1310ec3dddf.mp3","Conte colocando uma ficha de cada vez até 7.":"vebec88522b53b4d7.mp3","Muito bem! Você contou até 7 sem pular.":"v3eb86ce245e1773d.mp3","Toque contando: 1, 2, 3... pare no 7.":"v4aef848640389389.mp3","Vamos ver juntos: Muito bem! Você contou até 7 sem pular.":"v1361eb1718799538.mp3","Você sobe a escada contando. Parou no degrau depois do 8. Em que degrau está?":"v4a3f762645a356d8.mp3","Isso! Depois do 8 vem o 9.":"vcfeb23b32aceb802.mp3","Depois do 8 vem o 9: 7, 8, 9.":"ve2441de70659b310.mp3","Vamos ver juntos: Isso! Depois do 8 vem o 9.":"v693766551c1b7261.mp3","Contando até 5, qual jeito está certo?":"va4e12389b61799cc.mp3","Certo! A ordem é 1, 2, 3, 4, 5.":"ve313b31ee5e5dd5b.mp3","Sem pular e sem trocar: 1, 2, 3, 4, 5.":"vb9799833c55ad052.mp3","Vamos ver juntos: Certo! A ordem é 1, 2, 3, 4, 5.":"v149917fe36e8a507.mp3","Qual número vem ANTES do 4?":"vbda49f015b78bc9e.mp3","Isso! Antes do 4 vem o 3.":"vae2dff4e94c87bb3.mp3","Conte: 2, 3, 4. Antes do 4 é o 3.":"v70b6d85bd3a5e616.mp3","Vamos ver juntos: Isso! Antes do 4 vem o 3.":"v92fb3c790ea01eb5.mp3","Quantos pontos há?":"v622b23a0d9fb775e.mp3","Isso! São 6.":"vc1a8feb9c9c94415.mp3","Toque em cada ponto uma vez: são 6.":"v2dc7abb77813b15c.mp3","Vamos ver juntos: Isso! São 6.":"v58610134087126cf.mp3","Coloque uma ficha para cada estrela. São 8 estrelas.":"vec768860ed845633.mp3","Muito bem! Uma ficha para cada estrela.":"v4a274739047fe832.mp3","Uma ficha por estrela, sem repetir: 8.":"v8f731ab0c557fc8b.mp3","Vamos ver juntos: Muito bem! Uma ficha para cada estrela.":"v00b2ae3dd9eaf9ee.mp3","Cada criança ganha 1 balão. Estes são os balões. Quantas crianças?":"v348b28d1d6d152ad.mp3","Isso! 7 balões, 7 crianças.":"ve1b6e41f9f6de85e.mp3","Um balão por criança: conte cada um uma vez, são 7.":"v47f1b9d433cf155c.mp3","Vamos ver juntos: Isso! 7 balões, 7 crianças.":"v2f7cbbf03be2dc84.mp3","Como contar sem errar?":"vefcc6de1bb0a21ad.mp3","Certo! Um toque para cada objeto.":"v9c1515b18b25a4ed.mp3","O jeito certo é tocar em cada um, uma vez só.":"v6f13cb7ed8f05f87.mp3","Vamos ver juntos: Certo! Um toque para cada objeto.":"v0ad03ef22ba623cf.mp3","Quantos pontos?":"ve0de46c2194e8d3f.mp3","Isso! São 9.":"v74b3966c12ecf721.mp3","Conte cada ponto uma vez: 9.":"v66b29a04d71af2a3.mp3","Vamos ver juntos: Isso! São 9.":"va4a5159f976608fb.mp3","Você contou 1, 2, 3, 4, 5, 6, 7. Quantos há ao todo?":"v6e17fd12c0c58f44.mp3","Isso! O último número, 7, diz quantos são.":"va6a334e22d821df3.mp3","O último número que você falou, 7, é o total.":"v2123891f90ed7ace.mp3","Vamos ver juntos: Isso! O último número, 7, diz quantos são.":"v6582b3ee9a4bf2b5.mp3","Coloque 6 fichas no quadro, contando uma por uma.":"v57f86066e6de6b3c.mp3","Muito bem! São 6 no total.":"vbcbd51a5b387f358.mp3","O último contado é o total: 6.":"vfa079a8169be5776.mp3","Vamos ver juntos: Muito bem! São 6 no total.":"vc018c88bf0aed89b.mp3","Contamos os patos: 1, 2, 3, 4, 5. Quantos patos há?":"vfd646fa3c39472f4.mp3","Isso! São 5 patos.":"v05f14ff5a5528f65.mp3","Não precisa contar de novo: o último foi 5, então são 5.":"vaab96e42b1986777.mp3","Vamos ver juntos: Isso! São 5 patos.":"v1e37c44e69bbbc15.mp3","Alguém contou 8 blocos. Quantos são?":"ve53ef1b9f371bfbf.mp3","Certo! O último número é o total.":"v41ab26f62cf98df4.mp3","O último número contado já diz quantos são: 8.":"v74ea211d99aefe09.mp3","Vamos ver juntos: Certo! O último número é o total.":"vd8f93827bdf8bfc4.mp3","Você contou até 9 os carrinhos. Quantos carrinhos há?":"v002a60be28126064.mp3","O último número, 9, é a quantidade.":"va8f76728eb1744ce.mp3","Comece no 5 e conte mais um. Qual vem?":"ve57b46964d895913.mp3","Isso! Depois do 5 vem o 6.":"vbfea7b18d09686e2.mp3","Não volte ao 1: depois do 5 é o 6.":"v35f3d143488b65c0.mp3","Vamos ver juntos: Isso! Depois do 5 vem o 6.":"v49853d72258cf661.mp3","Já há 4 fichas. Continue contando até 9.":"v1136771e948b62e9.mp3","Muito bem! Você seguiu de 4 até 9.":"ve75a262cff861029.mp3","Comece do 4 e siga: 5, 6, 7, 8, 9.":"v026afb91f57f36e6.mp3","Vamos ver juntos: Muito bem! Você seguiu de 4 até 9.":"vefe5626e38f566b7.mp3","Comece no 7 e conte mais 3. Em que número você chega?":"vf3966a9a5298419c.mp3","Isso! Chega no 10.":"v7969671c12cfee6b.mp3","A partir do 7: 8, 9, 10.":"v3ad8ee9d1fde5758.mp3","Vamos ver juntos: Isso! Chega no 10.":"v97bfa22d1913d595.mp3","Para contar a partir do 6, o que fazer?":"v875c4b4ad2c21b42.mp3","Certo! Siga do 6: 7, 8, 9.":"v37651bfab3c54d0a.mp3","Não recomece do 1; continue de onde parou.":"v112a876fbf440d26.mp3","Vamos ver juntos: Certo! Siga do 6: 7, 8, 9.":"v0c4a8df9b7446942.mp3","Continue: 12, 13, __":"vafe84fbde046ebfc.mp3","Isso! Vem o 14.":"va1232dd9384cdc41.mp3","Depois de 13 vem 14.":"vc79a3321793dd7e7.mp3","Vamos ver juntos: Isso! Vem o 14.":"v8416f0d1b4c5dd25.mp3","Um grupo tem 7 fichas e outro tem 4. Qual é maior?":"vf4a485bf2c1dd7e1.mp3","Isso! 7 é mais que 4.":"vf4bc208c95bdadd4.mp3","Conte cada grupo: 7 é mais que 4.":"v1cfcbc48a4a0c598.mp3","Vamos ver juntos: Isso! 7 é mais que 4.":"v06692126cb5742f7.mp3","Faça um grupo MAIOR que 5: coloque 8 fichas.":"vc89d7ad49448abeb.mp3","Muito bem! 8 é o grupo maior.":"v959b7d83e8bd0f6e.mp3","O maior aqui é 8.":"v2f9361ccb984f315.mp3","Vamos ver juntos: Muito bem! 8 é o grupo maior.":"v74e7a03ab65dabf3.mp3","Há 6 maçãs e 6 peras. Qual tem mais?":"v2be780ba5221622d.mp3","Isso! 6 e 6 são iguais.":"vd405791e3114074e.mp3","Mesma quantidade: 6 = 6.":"v2d7b6c057171303d.mp3","Vamos ver juntos: Isso! 6 e 6 são iguais.":"v3b5de5efc1a2e725.mp3","8 fichas grandes e 9 pequenas. Qual grupo tem MAIS?":"v0e2d4f6d316aee2f.mp3","Certo! Conta a quantidade, não o tamanho.":"vda58e4bfe2684fc6.mp3","Tamanho não é quantidade: 9 > 8.":"vf29df5a473e00207.mp3","Vamos ver juntos: Certo! Conta a quantidade, não o tamanho.":"v453aa87078a987b3.mp3","Onde há MENOS: 3 ou 9?":"v5e954921aaea307c.mp3","Isso! 3 é menos que 9.":"vc7b20bbd04024254.mp3","Menos é o grupo menor: 3.":"vc070fc2d6ae2689a.mp3","Vamos ver juntos: Isso! 3 é menos que 9.":"v6f0c2c2ba1059e74.mp3","Contando para trás: 10, 9, 8, __?":"vb7518ffa45b46bab.mp3","Isso! Depois de 8 vem 7.":"v7653041952fe2ff9.mp3","Para trás: 8, 7.":"vd7f9ed13cfdf0b34.mp3","Vamos ver juntos: Isso! Depois de 8 vem 7.":"v21f9edcf77effd4c.mp3","Havia 10 fichas. Tire até ficar 6 (conte para trás).":"v85ae8d4014e68daa.mp3","Muito bem! 10, 9, 8, 7, 6.":"va6a4905def2c7205.mp3","Conte para trás até 6.":"vf95130a499d4819f.mp3","Vamos ver juntos: Muito bem! 10, 9, 8, 7, 6.":"ve67fb6b1fbb85cac.mp3","Foguete decolando: 5, 4, 3, __?":"vde0717f89a8b714a.mp3","Isso! Depois de 3 vem 2.":"v66870d44dfd83362.mp3","Regressiva: 3, 2.":"v5f3548d6dc3c0775.mp3","Vamos ver juntos: Isso! Depois de 3 vem 2.":"vc2efae5f02791083.mp3","Qual é a contagem para trás certa a partir de 10?":"vdead36dd10e58b88.mp3","Certo! Para trás é 10, 9, 8, 7.":"v8508ee29ba5db214.mp3","Para trás desce de 1 em 1.":"v65d26267a3236310.mp3","Vamos ver juntos: Certo! Para trás é 10, 9, 8, 7.":"veca70387a6f19b7c.mp3","Regressiva: 7, 6, 5, __?":"v6f8505e940fcc619.mp3","Isso! Depois de 5 vem 4.":"v08c7045c36aac70b.mp3","Para trás: 5, 4.":"v07439091e465ebb9.mp3","Vamos ver juntos: Isso! Depois de 5 vem 4.":"vc6ba696c919d3a0f.mp3","João plantou feijões mágicos e um pé enorme cresceu até o céu. Conte com ele para subir degrau a degrau! Conte os feijões um por um e diga quantos João guardou no bolso.":"vbc19f582ffb3f117.mp3","Conte os feijões um por um e diga quantos João guardou no bolso.":"v8be3b33ebb5a6fea.mp3","Quase! Quer tentar mais uma vez?":"v32cfd0dac041af89.mp3","Muito bem!":"v0a66934e39a451f1.mp3","Uau! Três estrelas!":"v09c8c9814fc71f70.mp3","Muito bem! Missão concluída!":"vab5a5874766115b6.mp3","Missão concluída!":"vc2d3f0217172e1a2.mp3","Você ganhou uma safira!":"v7dfa3bc01afe55bf.mp3","Você ganhou um diamante!":"vc57f61530141e20a.mp3","Você ganhou uma coroa!":"v9c70838aba583d61.mp3","Você achou um tesouro!":"v9e3f4d90e69fc7cd.mp3","Uau! Um tesouro raro!":"v960af44f8a1f5c24.mp3","Complete primeiro uma dezena inteira, depois conte o que sobra.":"v2164f72eecc03a60.mp3","Lembre: cada barra grande vale 10. Conte as barras primeiro.":"v4beb02dbb6e16a43.mp3","Olhe os números das pontas. Onde ficaria a metade do caminho?":"vc3129e0c9e25fa78.mp3","Pense com calma. Uma das opções foi retirada para ajudar.":"v8dd6708e676b1302.mp3","Ouça de novo a história. O que ela pergunta no final?":"vfe7c54e5471b4fb7.mp3","Qual explicação combina com o que você faria com os dedos ou blocos?":"v54a82987d2c16dcb.mp3","Respire fundo e pense no que o problema pergunta.":"vf6a9bf7a364f3836.mp3","Oi! Eu sou a Sofie. Quantos anos você tem?":"v06d651d441df4bcb.mp3","Você já lê sozinho?":"vac6245c0ec2d0f6a.mp3"};
+function voicedFile(t){return t&&AUDIO_MANIFEST[t]?('assets/audio/'+AUDIO_MANIFEST[t]):null;}
+function voicedSay(t){
+  if(!t){return;}
+  try{speechSynthesis&&speechSynthesis.cancel();}catch(e){}
+  if(_promptAudio){try{_promptAudio.pause();}catch(e){}_promptAudio=null;}
+  var f=voicedFile(t);
+  if(f){try{_promptAudio=new Audio(f);_promptAudio.play().catch(function(){speak(t);});return;}catch(e){}}
+  speak(t);
+}
 function audioText(item){return (item&&(item.audio_text||(item.prompt&&item.prompt.text)))||'';}
 function audioSrc(item){return (item&&item.audio)?('assets/audio/'+item.audio):null;}
 let _promptAudio=null;
 function playPrompt(item){
   try{speechSynthesis&&speechSynthesis.cancel();}catch(e){}
   if(_promptAudio){try{_promptAudio.pause();}catch(e){}_promptAudio=null;}
-  const src=audioSrc(item);
+  const src=audioSrc(item)||voicedFile(audioText(item));
   if(src){try{_promptAudio=new Audio(src);_promptAudio.play().catch(()=>speak(audioText(item)));return;}catch(e){}}
   speak(audioText(item));
 }
@@ -180,6 +195,7 @@ function renderChild(){
     const card=el('div','island'+(prog==null?' locked':''));
     card.appendChild(el('div','ic',meta.ic));
     card.appendChild(el('div','nm',meta.nm));
+    if(ax.axis_id===BEANSTALK_AXIS)card.classList.add('isl-snc');
     if(prog==null){card.appendChild(el('div','soon','em breve'));}
     else{
       const ring=el('div','ring');ring.style.setProperty('--p',Math.round(prog*100));
@@ -197,7 +213,7 @@ function renderOnboarding(){
   const wrap=el('div','child-wrap');
   const mc=el('div','mission-card');
   mc.appendChild(el('div',null,'<div style="font-size:46px">👋</div>'));
-  mc.appendChild(el('h2',null,'Oi! Eu sou o Wanwan.'));
+  mc.appendChild(el('h2',null,'Oi! Eu sou a Sofie.'));
   if(!S.child.age_band){
     mc.appendChild(el('div','muted','Quantos anos você tem?'));
     const g=el('div','bigchoice');
@@ -215,7 +231,7 @@ function renderOnboarding(){
     mc.appendChild(el('div','note','Tudo aqui pode ser ouvido no 🔊 — ler não é obrigatório.'));
   }
   wrap.appendChild(mc);view.appendChild(wrap);
-  speak(S.child.age_band?'Você já lê sozinho?':'Oi! Eu sou o Wanwan. Quantos anos você tem?');
+  voicedSay(S.child.age_band?'Você já lê sozinho?':'Oi! Eu sou a Sofie. Quantos anos você tem?');
 }
 function placementDoneAxes(){
   const pl=S.placement,groups=E.sessionAxisGroups(S.child.age_band);
@@ -234,12 +250,22 @@ function renderTrail(axisId){
   wrap.appendChild(el('div','muted small','Cada degrau é uma nova conquista. Complete o caminho!'));
   const tale=E.taleOf(axisId);
   if(tale){
-    const tb=el('div','tale-band');
-    tb.appendChild(el('h3',null,'📖 '+tale.title));
-    tb.appendChild(el('div','goal',tale.goal));
     const doneCh=(tale.chapters||[]).filter(ch=>E.chapterComplete(S,ch.skills)).length;
-    tb.appendChild(el('div','small muted','Capítulos concluídos: '+doneCh+' de '+(tale.chapters||[]).length+' · o baú abre ao dominar cada capítulo.'));
-    wrap.appendChild(tb);
+    const progTxt='Capítulos concluídos: '+doneCh+' de '+(tale.chapters||[]).length+' · o baú abre ao dominar cada capítulo.';
+    if(axisId===BEANSTALK_AXIS){
+      const hero=el('div','snc-hero');
+      const jb=el('img','joao');jb.src=bsImg('joao.png');jb.alt='João';jb.setAttribute('aria-hidden','true');hero.appendChild(jb);
+      hero.appendChild(el('h3',null,'📖 '+tale.title));
+      hero.appendChild(el('div','goal','🎯 '+tale.goal));
+      hero.appendChild(el('div','prog',progTxt));
+      wrap.appendChild(hero);
+    }else{
+      const tb=el('div','tale-band');
+      tb.appendChild(el('h3',null,'📖 '+tale.title));
+      tb.appendChild(el('div','goal',tale.goal));
+      tb.appendChild(el('div','small muted',progTxt));
+      wrap.appendChild(tb);
+    }
   }
   const trail=el('div','trail');
   E.axisSkills(axisId).forEach(s=>{
@@ -290,18 +316,23 @@ function renderMissionIntro(skill,ci,opts){
   const say=(isFirst&&ci.tale.intro?ci.tale.intro+' ':'')+ci.ch.beat; // 1ª missão da ilha: abre com a cena do conto
   const back=el('button','btn ghost','\u2190 Voltar');back.onclick=opts.onBack||(()=>renderTrail(skill.axis_id));wrap.appendChild(back);
   const card=el('div','mission-card');card.style.textAlign='center';
-  card.appendChild(el('div',null,'<div style="font-size:52px">'+(meta&&meta.ic||'\ud83d\udcd6')+'</div>'));
+  const _bs=(skill.axis_id===BEANSTALK_AXIS);
+  if(_bs){
+    card.appendChild(el('div','scene-stage'));
+  }else{
+    card.appendChild(el('div',null,'<div style="font-size:52px">'+(meta&&meta.ic||'\ud83d\udcd6')+'</div>'));
+  }
   card.appendChild(el('div','pill learn','\ud83d\udcd6 '+ci.tale.title));
-  if(isFirst&&ci.tale.intro){const sc=el('div',null,ci.tale.intro);sc.style.cssText='font-size:15px;font-style:italic;margin:8px 6px;color:#555;line-height:1.4';card.appendChild(sc);}
-  card.appendChild(el('h2',null,ci.ch.title));
-  const beat=el('div',null,ci.ch.beat);beat.style.cssText='font-size:17px;margin:10px 6px;line-height:1.45';card.appendChild(beat);
-  card.appendChild(el('div','small muted','\ud83c\udfaf '+ci.tale.goal));
+  if(isFirst&&ci.tale.intro){const sc=el('div','reveal-line d1',ci.tale.intro);sc.style.cssText='font-size:15px;font-style:italic;margin:8px 6px;color:#555;line-height:1.4';card.appendChild(sc);}
+  card.appendChild(el('h2','reveal-line d1',ci.ch.title));
+  const beat=el('div','reveal-line d2',ci.ch.beat);beat.style.cssText='font-size:17px;margin:10px 6px;line-height:1.45';card.appendChild(beat);
+  card.appendChild(el('div','small muted reveal-line d3','\ud83c\udfaf '+ci.tale.goal));
   const row=el('div','row');row.style.cssText='justify-content:center;gap:10px;margin-top:14px';
-  const sb=el('button','speak','\ud83d\udd0a');sb.title='Ouvir de novo';sb.onclick=()=>speak(say);row.appendChild(sb);
+  const sb=el('button','speak','\ud83d\udd0a');sb.title='Ouvir de novo';sb.onclick=()=>voicedSay(say);row.appendChild(sb);
   const go=el('button','big-btn','Come\u00e7ar!');go.onclick=()=>startSession(opts.session||E.buildMission(S,now(),skill.skill_id));row.appendChild(go);
   card.appendChild(row);
   wrap.appendChild(card);view.appendChild(wrap);
-  if(autoPlaysPrompt())speak(say); // narra só p/ pré-leitor/leitor inicial; o mais velho lê e usa 🔊 se quiser
+  if(autoPlaysPrompt())voicedSay(say); // narra só p/ pré-leitor/leitor inicial; o mais velho lê e usa 🔊 se quiser
 }
 function childDesc(s){
   const d=s.description;return d.length>64?d.slice(0,62)+'…':d;
@@ -413,19 +444,19 @@ function renderStars(st,selos,treasureChanges,crossed){
   b.onclick=hasT?(()=>renderTreasureReveal(treasureChanges)):render;c.appendChild(b);
   wrap.appendChild(c);view.appendChild(wrap);
   const _msg=crossed?('Você ganhou '+({safira:'uma safira!',diamante:'um diamante!',coroa:'uma coroa!'}[crossed])):(st.stars>=3?'Uau! Três estrelas!':(st.stars>=1?'Muito bem! Missão concluída!':'Missão concluída!'));
-  speak(_msg);
+  voicedSay(_msg);
 }
 function treasureCatalogItem(tid){return ((window.APP_DATA&&window.APP_DATA.treasures)||[]).find(t=>t.id===tid)||null;}
 function renderTreasureReveal(changes){
   clear(view);const wrap=el('div','child-wrap');
   const c=el('div','mission-card celebrate');
-  c.appendChild(el('div',null,'<div class="chest">🎁</div>'));
+  c.appendChild(el('div',null,'<img class="art-chest" src="assets/img/bau.png" alt="baú do tesouro">'));
   c.appendChild(el('h2',null,changes.length>1?'Baús abertos!':'Baú aberto!'));
   changes.forEach(ch=>{
     const t=treasureCatalogItem(ch.treasure);if(!t)return;
     const rm=RARITY_META[ch.rarity]||RARITY_META.comum;
     const card=el('div','tcard '+rm.cls);card.style.margin='10px auto';card.style.maxWidth='210px';
-    card.appendChild(el('div','em reveal-treasure',t.emoji||'💎'));
+    if(TREASURE_ART[ch.treasure]){card.appendChild(el('div',null,'<img class="art-treasure" src="'+bsImg(TREASURE_ART[ch.treasure])+'" alt="'+(t.name||'tesouro')+'">'));}else{card.appendChild(el('div','em reveal-treasure',t.emoji||'💎'));}
     card.appendChild(el('div','tn',t.name));
     card.appendChild(el('div','rar',rm.nm));
     if(!ch.isNew&&ch.upgradedFrom)card.appendChild(el('div','where','Evoluiu de '+((RARITY_META[ch.upgradedFrom]||{nm:ch.upgradedFrom}).nm)+'!'));
@@ -435,7 +466,7 @@ function renderTreasureReveal(changes){
   const b=el('button','big-btn cofre-btn','Ver meu Cofre');b.style.marginTop='12px';b.onclick=renderCofre;c.appendChild(b);
   const b2=el('button','big-btn alt','Voltar ao início');b2.style.marginTop='10px';b2.onclick=render;c.appendChild(b2);
   wrap.appendChild(c);view.appendChild(wrap);
-  speak(changes.some(ch=>ch.rarity==='lendario'||ch.rarity==='epico')?'Uau! Um tesouro raro!':'Você achou um tesouro!');
+  voicedSay(changes.some(ch=>ch.rarity==='lendario'||ch.rarity==='epico')?'Uau! Um tesouro raro!':'Você achou um tesouro!');
 }
 function renderCofre(){
   clear(view);const wrap=el('div','child-wrap');
@@ -461,7 +492,7 @@ function renderCofre(){
     items.forEach(function(t){
       const owned=t.owned;const rm=owned?(RARITY_META[t.rarity]||RARITY_META.comum):null;
       const card=el('div','tcard '+(owned?rm.cls:'locked'));
-      card.appendChild(el('div','em',owned?(t.emoji||'💎'):'❔'));
+      if(owned&&TREASURE_ART[t.id]){card.appendChild(el('div',null,'<img class="art-treasure" style="width:88px" src="'+bsImg(TREASURE_ART[t.id])+'" alt="'+(t.name||'tesouro')+'">'));}else{card.appendChild(el('div','em',owned?(t.emoji||'💎'):'❔'));}
       card.appendChild(el('div','tn',owned?t.name:'???'));
       if(owned){card.appendChild(el('div','rar',rm.nm));}
       else{const ch=E.treasureChapter(ax.axis_id,t.chapter);card.appendChild(el('div','where','🔒 '+(ch?ch.beat:'Continue a aventura para conquistar.')));}
@@ -495,7 +526,7 @@ function renderRunnerStep(){
   const ph=el('div','row');ph.style.justifyContent='center';ph.style.gap='10px';
   const sb=el('button','speak','🔊');sb.title='Ouvir';sb.onclick=()=>playPrompt(item);ph.appendChild(sb);
   card.appendChild(ph);
-  card.appendChild(el('div','prompt',item.prompt.text));
+  card.appendChild(el('div','prompt box3d',item.prompt.text));
   if(S.mode==='with_adult'&&item.requires_adult)card.appendChild(el('div','pill warn','👩‍👧 com adulto'));
   const stage=el('div','stage');card.appendChild(stage);
   const fbHost=el('div');card.appendChild(fbHost);
@@ -529,7 +560,7 @@ function applyHint(item,stage,card){
     if(target)target.classList.add('faded');
   }
   card.appendChild(el('div','note','💡 '+txt));
-  speak(txt);
+  voicedSay(txt);
 }
 function onAnswer(item,res,fbHost,navHost,stage){
   if(runner.answered)return;
@@ -538,8 +569,8 @@ function onAnswer(item,res,fbHost,navHost,stage){
   if(!res.correct&&st.tries===1&&!isPl){
     st.firstError=res.errorPattern||null;
     clear(fbHost);
-    const fb=el('div','feedback no','💛 Quase! Quer tentar mais uma vez?');fbHost.appendChild(fb);
-    speak('Quase! Quer tentar mais uma vez?');
+    const fb=el('div','feedback no box3d','💛 Quase! Quer tentar mais uma vez?');fbHost.appendChild(fb);
+    voicedSay('Quase! Quer tentar mais uma vez?');
     clear(navHost);
     const retry=el('button','big-btn alt','Tentar de novo');
     retry.onclick=()=>{clear(fbHost);clear(navHost);runner.step.t0=Date.now();renderItem(item,stage,r=>onAnswer(item,r,fbHost,navHost,stage),{reveal:true});}; // C-02: 2ª tentativa é final
@@ -562,10 +593,10 @@ function onAnswer(item,res,fbHost,navHost,stage){
   }
   save();
   clear(fbHost);
-  const fb=el('div','feedback '+(res.correct?'ok':'no'));
+  const fb=el('div','feedback box3d '+(res.correct?'ok':'no'));
   let msg=res.correct?(item.feedback_correct||'Muito bem!'):
     ((item.feedback_error&&(item.feedback_error[String(res.rawValue)]||item.feedback_error[res.errorPattern]||item.feedback_error.default))||'Vamos ver juntos: '+(item.feedback_correct||''));
-  fb.innerHTML=(res.correct?'✅ ':'💡 ')+msg;fbHost.appendChild(fb);speak(msg);
+  fb.innerHTML=(res.correct?'✅ ':'💡 ')+msg;fbHost.appendChild(fb);voicedSay(msg);
   clear(navHost);
   const last=isPl?false:runner.idx>=runner.sess.items.length-1;
   const next=el('button','big-btn',isPl?'Próxima':(last?'Terminar':'Próxima'));
