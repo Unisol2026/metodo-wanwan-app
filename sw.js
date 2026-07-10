@@ -5,7 +5,7 @@
    Sem rede a terceiros — coerente com a minimização LGPD do projeto. */
 'use strict';
 
-const CACHE_VERSION = 'wanwan-v0.5.0';
+const CACHE_VERSION = 'wanwan-v0.6.0';
 const APP_SHELL = [
   './',
   './index.html',
@@ -14,6 +14,16 @@ const APP_SHELL = [
   './engine.js',
   './app.js',
   './icon.svg',
+  './assets/fonts/baloo2-500.woff2',
+  './assets/fonts/baloo2-600.woff2',
+  './assets/fonts/baloo2-700.woff2',
+  './assets/fonts/jakarta-400.woff2',
+  './assets/fonts/jakarta-600.woff2',
+  './assets/fonts/jakarta-700.woff2',
+  './assets/fonts/jakarta-800.woff2',
+  './assets/fonts/lexend-400.woff2',
+  './assets/fonts/lexend-600.woff2',
+  './assets/fonts/lexend-700.woff2',
   './assets/fonts/fredoka-400.woff2',
   './assets/fonts/fredoka-500.woff2',
   './assets/fonts/fredoka-600.woff2',

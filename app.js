@@ -36,6 +36,18 @@ function ensurePin(s){if(s.parentPin===undefined)s.parentPin=null;return s;}
 let saveWarned=false;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){if(!saveWarned){saveWarned=true;alert('Não consegui salvar o progresso neste navegador (armazenamento cheio ou bloqueado). O jogo continua, mas o progresso pode se perder ao fechar.');}}}
 function now(){return Date.now()+S.devDayOffset*DAY;}
+/* ---------- preferências de exibição (handoff tela 11): fonte p/ dislexia + alto contraste.
+   Preferência de UI deste aparelho (não é dado pedagógico): localStorage próprio, fora do estado do engine. */
+const UIP_KEY='wanwan_ui_prefs_v1';
+let UIP=(function(){try{return JSON.parse(localStorage.getItem(UIP_KEY))||{};}catch(e){return {};}})();
+function applyUiPrefs(){try{const r=document.documentElement;r.setAttribute('data-dys',UIP.dys?'1':'');r.setAttribute('data-contrast',UIP.contrast?'1':'');}catch(e){}}
+function saveUiPrefs(){try{localStorage.setItem(UIP_KEY,JSON.stringify(UIP));}catch(e){}}
+function mkToggle(label,desc,key){
+  const b=el('button','tgl'+(UIP[key]?' on':''));
+  b.innerHTML='<span><span class="t-l">'+label+'</span><span class="t-d">'+desc+'</span></span><span class="track"><i></i></span>';
+  b.onclick=()=>{UIP[key]=!UIP[key];saveUiPrefs();applyUiPrefs();b.classList.toggle('on',!!UIP[key]);};
+  return b;
+}
 
 /* ---------- áudio (só TTS de enunciado; nunca grava a criança) ---------- */
 let voice=null;
@@ -171,13 +183,17 @@ function renderChild(){
     view.appendChild(wrap);return;
   }
 
-  const mc=el('div','mission-card');mc.style.marginTop='16px';
-  mc.appendChild(el('div',null,'<div style="font-size:42px">⭐</div>'));
-  mc.appendChild(el('h2',null,'Missão do dia'));
-  mc.appendChild(el('div','muted small','Atividades escolhidas só para você — com revisão do que você já conquistou.'));
-  const b=el('button','big-btn','Começar missão');b.style.marginTop='12px';
-  b.onclick=startDailyMission;mc.appendChild(b);
-  const b2=el('button','big-btn alt','🎮 Jogos');b2.style.marginTop='10px';b2.onclick=renderGames;mc.appendChild(b2);
+  /* hero "Missão do dia" (design handoff v2, tela 1: fundo marca-escura + CTA âmbar pill) */
+  const mc=el('div','mission-card hero');mc.style.marginTop='16px';
+  mc.appendChild(el('div','kicker','Missão do dia'));
+  mc.appendChild(el('h2',null,'Sua aventura de hoje'));
+  mc.appendChild(el('div','sub','Atividades escolhidas só para você — com revisão do que você já conquistou.'));
+  const cta=el('div','hero-cta');
+  const b=el('button','big-btn','Começar missão');b.style.width='auto';
+  b.onclick=startDailyMission;cta.appendChild(b);
+  cta.appendChild(el('div','eta','≈ 10 min'));
+  mc.appendChild(cta);
+  const b2=el('button','big-btn alt','🎮 Jogos');b2.style.marginTop='12px';b2.onclick=renderGames;mc.appendChild(b2);
   wrap.appendChild(mc);
   const cst0=E.collectionStatus(S);
   const cofreCard=el('div','mission-card');cofreCard.style.marginTop='12px';
@@ -435,6 +451,7 @@ function renderStars(st,selos,treasureChanges,crossed){
     const _tp=el('div',null,'✨ Você ganhou '+_nm+'!');_tp.style.cssText='font-size:20px;font-weight:800;margin:8px 0;color:#2a6ad1';c.appendChild(_tp);}
   const _rl=el('div',null,rewardLadderStr(_rt));_rl.style.cssText='font-size:22px;margin-top:6px';c.appendChild(_rl);
   c.appendChild(el('div','small muted','Faltam '+_rt.toNextSafira+' ⭐ para a próxima safira 🔷'));
+  c.appendChild(el('div','small muted','Sem notas, sem comparação. Este é o seu caminho.'));
   if(selos.length){
     c.appendChild(el('h3',null,'Novos selos!'));
     selos.forEach(sk=>{const s=E.skillById(sk);c.appendChild(el('span','selo'+(S.selos.find(x=>x.skill_id===sk&&x.gold)?' gold':''),'🏅 '+AXMETA[s.axis_id].nm));});
@@ -521,13 +538,17 @@ function renderRunnerStep(){
     const dots=el('div','progress-dots');
     runner.sess.items.forEach((_,i)=>{const d=el('i');if(i<runner.idx)d.classList.add('done');if(i===runner.idx)d.classList.add('now');dots.appendChild(d);});
     wrap.appendChild(dots);
+    wrap.appendChild(el('div','small muted center',(runner.idx+1)+' de '+runner.sess.items.length));
   }
   const card=el('div','mission-card');card.style.textAlign='center';
-  const ph=el('div','row');ph.style.justifyContent='center';ph.style.gap='10px';
-  const sb=el('button','speak','🔊');sb.title='Ouvir';sb.onclick=()=>playPrompt(item);ph.appendChild(sb);
-  card.appendChild(ph);
-  card.appendChild(el('div','prompt box3d',item.prompt.text));
-  if(S.mode==='with_adult'&&item.requires_adult)card.appendChild(el('div','pill warn','👩‍👧 com adulto'));
+  /* enunciado como botão de áudio (handoff): pill marca-soft com play + equalizador; todo enunciado é ouvível */
+  const ap=el('button','audio-pill');ap.title='Ouvir o enunciado';
+  ap.appendChild(el('span','ap-ic'));
+  ap.appendChild(el('span','ap-txt',item.prompt.text));
+  ap.appendChild(el('span','eq','<i></i><i></i><i></i>'));
+  ap.onclick=()=>{playPrompt(item);ap.classList.add('playing');setTimeout(()=>ap.classList.remove('playing'),2200);};
+  card.appendChild(ap);
+  if(item.requires_adult)card.appendChild(el('div','pill adult','✋ Fazer com um adulto'));
   const stage=el('div','stage');card.appendChild(stage);
   const fbHost=el('div');card.appendChild(fbHost);
   const navHost=el('div');navHost.style.marginTop='12px';card.appendChild(navHost);
@@ -569,7 +590,7 @@ function onAnswer(item,res,fbHost,navHost,stage){
   if(!res.correct&&st.tries===1&&!isPl){
     st.firstError=res.errorPattern||null;
     clear(fbHost);
-    const fb=el('div','feedback no box3d','💛 Quase! Quer tentar mais uma vez?');fbHost.appendChild(fb);
+    const fb=el('div','feedback no','<div class="fb-h"><span class="fb-ic">?</span>Quase! Quer tentar mais uma vez?</div>');fbHost.appendChild(fb);
     voicedSay('Quase! Quer tentar mais uma vez?');
     clear(navHost);
     const retry=el('button','big-btn alt','Tentar de novo');
@@ -593,10 +614,10 @@ function onAnswer(item,res,fbHost,navHost,stage){
   }
   save();
   clear(fbHost);
-  const fb=el('div','feedback box3d '+(res.correct?'ok':'no'));
+  const fb=el('div','feedback '+(res.correct?'ok':'no'));
   let msg=res.correct?(item.feedback_correct||'Muito bem!'):
     ((item.feedback_error&&(item.feedback_error[String(res.rawValue)]||item.feedback_error[res.errorPattern]||item.feedback_error.default))||'Vamos ver juntos: '+(item.feedback_correct||''));
-  fb.innerHTML=(res.correct?'✅ ':'💡 ')+msg;fbHost.appendChild(fb);voicedSay(msg);
+  fb.innerHTML='<div class="fb-h"><span class="fb-ic">'+(res.correct?'✓':'?')+'</span>'+(res.correct?'Isso mesmo!':'Vamos pensar juntos')+'</div><div class="fb-b">'+msg+'</div>';fbHost.appendChild(fb);voicedSay(msg);
   clear(navHost);
   const last=isPl?false:runner.idx>=runner.sess.items.length-1;
   const next=el('button','big-btn',isPl?'Próxima':(last?'Terminar':'Próxima'));
@@ -783,6 +804,13 @@ function renderParent(){
   c3.appendChild(el('div','note','“(sondagem)” = nível provisório da exploração inicial, com confiança baixa — as próximas missões confirmam. “(a confirmar)” = domínio sem prática há mais de 60 dias — a próxima revisão reconfirma. A criança nunca vê estes códigos.'));
   view.appendChild(c3);
 
+  const cA=el('div','card');
+  cA.appendChild(el('h3',null,'Preferências de exibição'));
+  cA.appendChild(el('div','muted small','Valem para este aparelho. A informação no app nunca depende só de cor.'));
+  cA.appendChild(mkToggle('Fonte para dislexia','Troca o texto do app pela fonte Lexend, mais fácil de ler.','dys'));
+  cA.appendChild(mkToggle('Alto contraste','Escurece textos e reforça bordas em todo o app.','contrast'));
+  view.appendChild(cA);
+
   const cSec=el('div','card');
   cSec.appendChild(el('h3',null,'Segurança'));
   cSec.appendChild(el('div','muted small','PIN protege a entrada neste painel e no Admin vindo da aba Criança.'));
@@ -829,7 +857,7 @@ function nextStep(s,m){
   if(missing.length)return 'Coletar: '+missing.slice(0,2).map(f=>FMT_LABEL[f]).join(', ')+'.';
   return 'Consolidar com acurácia mais alta.';
 }
-function metric(l,v){const d=el('div','card');d.style.cssText='margin:0;text-align:center;padding:14px';d.appendChild(el('div',null,'<div style="font-size:28px;font-weight:800">'+v+'</div>'));d.appendChild(el('div','muted small',l));return d;}
+function metric(l,v){const d=el('div','stat');d.appendChild(el('div','v',String(v)));d.appendChild(el('div','l',l));return d;}
 
 /* ============================================ ADMIN */
 function renderAdmin(){
@@ -986,6 +1014,7 @@ function setupPin(){
   return true;
 }
 function boot(){
+  applyUiPrefs();
   if(!S.parentPin){renderFirstRunPinSetup();return;}
   render();
 }
