@@ -27,6 +27,8 @@ const CHAPTER_PROPS={
 const DEFAULT_PROP={g:'\u2B50',n:'Desafio'};
 const TALE_VINE={1:['#4E9E4A','#8FD37A']}; /* caule do pé de feijão; demais ilhas usam o caminho padrão */
 function islandArt(axisId){return axisId===BEANSTALK_AXIS?'fundo-mapa.jpg':(ISLAND_ART[axisId]||null);}
+/* arte da CENA de um capítulo (o cap.1 do Pé de Feijão tem cena própria; os demais herdam a arte da ilha) */
+function chapterArt(axisId,chId){return (axisId===BEANSTALK_AXIS&&chId==='SNC-CAP-1')?'cena-cap1.jpg':islandArt(axisId);}
 function propOf(chId){return CHAPTER_PROPS[chId]||DEFAULT_PROP;}
 function skillAtTarget(s){const m=E.mastery(S,s.skill_id);return li(m.level)>=li(s.level_target||'N5');}
 const AXMETA={1:{ic:'🔢',nm:'Contagem'},2:{ic:'🧩',nm:'Partes e Todo'},3:{ic:'🧱',nm:'Dezenas'},
@@ -378,7 +380,7 @@ function renderChapter(axisId,chId){
   const back=el('button','btn ghost','← Mapa da história');back.onclick=()=>renderTrail(axisId);wrap.appendChild(back);
   const card=el('div','mission-card');card.style.textAlign='left';
   const scene=el('div','ch-scene');
-  const sceneArt=(axisId===BEANSTALK_AXIS&&ch.id==='SNC-CAP-1')?'cena-cap1.jpg':islandArt(axisId);
+  const sceneArt=chapterArt(axisId,ch.id);
   if(sceneArt)scene.style.backgroundImage="url('assets/img/"+sceneArt+"')";
   scene.setAttribute('aria-hidden','true');
   card.appendChild(scene);
@@ -654,18 +656,25 @@ function renderRunnerStep(){
     wrap.appendChild(dots);
     wrap.appendChild(el('div','small muted center',(runner.idx+1)+' de '+runner.sess.items.length));
   }
-  // faixa da história: cenário + capítulo a que este item pertence (11/07/2026)
+  // A QUESTÃO ACONTECE DENTRO DA CENA (11/07/2026): o ambiente do conto vira o fundo da
+  // tela inteira e a cena do capítulo abre a missão — não uma tarja fina no topo.
   const _sk=E.skillById(item.skill_id), _ci=_sk?chapterFor(_sk):null;
   if(_ci){
-    const qb=el('div','quest-band');
-    const qart=islandArt(_sk.axis_id);
-    if(qart)qb.style.backgroundImage="url('assets/img/"+qart+"')";
-    qb.appendChild(el('div','qg',propOf(_ci.ch.id).g));
+    const _amb=islandArt(_sk.axis_id);
+    if(_amb){wrap.classList.add('tale-stage');wrap.style.backgroundImage="url('assets/img/"+_amb+"')";}
+    const qs=el('div','quest-scene');
+    if(chapterArt(_sk.axis_id,_ci.ch.id))qs.style.backgroundImage="url('assets/img/"+chapterArt(_sk.axis_id,_ci.ch.id)+"')";
+    if(_sk.axis_id===BEANSTALK_AXIS){
+      const j=el('img','qs-joao');j.src=bsImg('joao.png');j.alt='';j.setAttribute('aria-hidden','true');qs.appendChild(j);
+    }
+    const cap=el('div','qs-cap');
+    cap.appendChild(el('div','qg',propOf(_ci.ch.id).g));
     const qtx=el('div');qtx.style.flex='1';
     qtx.appendChild(el('div','qt',_ci.ch.title));
     qtx.appendChild(el('div','qs','📖 '+_ci.tale.title));
-    qb.appendChild(qtx);
-    wrap.appendChild(qb);
+    cap.appendChild(qtx);
+    qs.appendChild(cap);
+    wrap.appendChild(qs);
   }
   const card=el('div','mission-card');card.style.textAlign='center';
   /* enunciado como botão de áudio (handoff): pill marca-soft com play + equalizador; todo enunciado é ouvível */

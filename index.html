@@ -371,15 +371,25 @@ summary{cursor:pointer;font-weight:700}
 .prop.done{border-color:var(--ok);background:var(--ok-soft)}
 .prop.locked{opacity:.55;filter:grayscale(.7)}
 .prop.ghost{opacity:.45;border-style:dashed}
-/* faixa da história dentro da missão: a criança não perde o fio do conto ao jogar */
-.quest-band{position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;border-radius:16px;
-  padding:9px 12px;margin:10px 0 2px;min-height:54px;background:var(--surface2) center/cover no-repeat;
-  border:1.5px solid var(--line);box-shadow:var(--shadow)}
-.quest-band::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,.66)}
-.quest-band>*{position:relative}
-.quest-band .qg{font-size:24px;line-height:1}
-.quest-band .qt{font-family:var(--font-display);font-weight:600;font-size:13.5px;color:var(--brand-ink);line-height:1.2}
-.quest-band .qs{font-size:11px;font-weight:700;color:var(--muted)}
+/* A QUESTÃO ACONTECE DENTRO DA CENA (11/07/2026 — correção do "frio"):
+   o ambiente do conto é o fundo da tela inteira e a cena do capítulo abre a missão. */
+.child-wrap.tale-stage{position:relative;overflow:hidden;border:none;padding:14px;
+  background:var(--bg) center/cover no-repeat}
+.child-wrap.tale-stage::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(250,245,236,.55),rgba(250,245,236,.86) 42%,rgba(250,245,236,.95))}
+.child-wrap.tale-stage>*{position:relative;z-index:1}
+.quest-scene{position:relative;overflow:hidden;border-radius:20px;height:150px;margin:8px 0 10px;
+  background:var(--surface2) center 62%/cover no-repeat;border:2px solid #fff;
+  box-shadow:0 12px 26px -18px rgba(42,39,33,.7)}
+.quest-scene .qs-cap{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.92);border-radius:14px;padding:7px 11px;box-shadow:var(--shadow)}
+.quest-scene .qg{font-size:22px;line-height:1}
+.quest-scene .qt{font-family:var(--font-display);font-weight:600;font-size:13.5px;color:var(--brand-ink);line-height:1.15}
+.quest-scene .qs{font-size:11px;font-weight:700;color:var(--muted)}
+.quest-scene .qs-joao{position:absolute;right:8px;top:6px;width:62px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.3))}
+.child-wrap.tale-stage .mission-card{background:rgba(255,255,255,.97);border-color:#fff;
+  box-shadow:0 16px 40px -26px rgba(42,39,33,.85)}
+@media(max-width:520px){.quest-scene{height:128px}.quest-scene .qs-joao{width:52px}}
 /* manipulativos vestidos com o objeto do capítulo (feijão, folha, nuvem...) */
 .dc-dot.glyph{background:transparent;width:auto;height:auto;font-size:26px;line-height:1}
 .tenframe.glyphed .tf-cell.on{background:var(--amber-soft);border-color:var(--amber)}
@@ -389,7 +399,7 @@ summary{cursor:pointer;font-weight:700}
 <body>
 <div class="app">
   <div class="topbar">
-    <div class="brand" title="build v0.8.0">Método Wanwan <small>· mat 5–12 · <span id="buildTag">v0.8.0</span></small></div>
+    <div class="brand" title="build v0.8.1">Método Wanwan <small>· mat 5–12 · <span id="buildTag">v0.8.1</span></small></div>
     <div class="mode-toggle" id="modeToggle" title="Modo de sessão">
       <button data-mode="with_adult">✋ com adulto</button>
       <button data-mode="solo" class="on">sozinho</button>
