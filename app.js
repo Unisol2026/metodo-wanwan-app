@@ -87,6 +87,12 @@ function playPrompt(item){
 function autoPlaysPrompt(){return S.child.reading_profile!=='leitor';}
 function maybeAutoPlay(item){if(autoPlaysPrompt())playPrompt(item);}
 
+/* ---------- mascote (handoff): cachorrinho em CSS puro; placeholder até a arte oficial ---------- */
+function mascotEl(){
+  const m=el('div','mascot');m.setAttribute('aria-hidden','true');
+  m.innerHTML='<i class="m-ear l"></i><i class="m-ear r"></i><i class="m-head"></i><i class="m-eye l"></i><i class="m-eye r"></i><i class="m-muz"></i><i class="m-nose"></i><i class="m-tongue"></i>';
+  return m;
+}
 /* ---------- DOM ---------- */
 const view=document.getElementById('view');
 function el(t,c,h){const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;}
@@ -107,6 +113,9 @@ function render(){
   parentBtn.style.display=childLocked?'none':'';
   adminBtn.style.display=childLocked?'none':'';
   lockBtn.style.display=childLocked?'':'none';
+  /* 10/07 handoff: a criança não vê chrome de adulto — modo e superfícies só após o PIN */
+  const mt=document.getElementById('modeToggle');if(mt)mt.style.display=childLocked?'none':'';
+  const segEl=document.getElementById('surfaceSeg');if(segEl)segEl.style.display=childLocked?'none':'';
   document.querySelectorAll('#surfaceSeg button').forEach(b=>b.classList.toggle('on',b.dataset.s===S.surface));
   document.querySelectorAll('#modeToggle button').forEach(b=>b.classList.toggle('on',b.dataset.mode===S.mode));
   clear(view);
@@ -170,10 +179,11 @@ function renderChild(){
 
   if(!S.placement.finished){
     const prog=placementDoneAxes();
-    const mc=el('div','mission-card');mc.style.marginTop='16px';
-    mc.appendChild(el('div',null,'<div style="font-size:46px">🗺️</div>'));
-    mc.appendChild(el('h2',null,'Missão de Exploração'));
-    mc.appendChild(el('div','muted small','Visite as ilhas e mostre o que você já sabe. Sem pressa, sem nota — é só para eu montar o seu mapa!'));
+    const mc=el('div','mission-card hero');mc.style.marginTop='16px';
+    mc.appendChild(mascotEl());
+    mc.appendChild(el('div','kicker','Missão de Exploração'));
+    mc.appendChild(el('h2',null,'Explorar as ilhas'));
+    mc.appendChild(el('div','sub','Mostre o que você já sabe. Sem pressa, sem nota — é só para eu montar o seu mapa!'));
     const dots=el('div','progress-dots');
     for(let i=0;i<prog.total;i++){const d=el('i');if(i<prog.done)d.classList.add('done');if(i===prog.done)d.classList.add('now');dots.appendChild(d);}
     mc.appendChild(dots);
@@ -185,6 +195,7 @@ function renderChild(){
 
   /* hero "Missão do dia" (design handoff v2, tela 1: fundo marca-escura + CTA âmbar pill) */
   const mc=el('div','mission-card hero');mc.style.marginTop='16px';
+  mc.appendChild(mascotEl());
   mc.appendChild(el('div','kicker','Missão do dia'));
   mc.appendChild(el('h2',null,'Sua aventura de hoje'));
   mc.appendChild(el('div','sub','Atividades escolhidas só para você — com revisão do que você já conquistou.'));
@@ -807,6 +818,14 @@ function renderParent(){
   const cA=el('div','card');
   cA.appendChild(el('h3',null,'Preferências de exibição'));
   cA.appendChild(el('div','muted small','Valem para este aparelho. A informação no app nunca depende só de cor.'));
+  cA.appendChild(el('div','small','<b>Modo preferido</b>'));
+  const sm=el('div','segmode');
+  [['solo','Sozinha'],['with_adult','✋ Com um adulto por perto']].forEach(([v,t])=>{
+    const b=el('button',v===S.mode?'on':'',t);
+    b.onclick=()=>{S.mode=v;save();render();};
+    sm.appendChild(b);
+  });
+  cA.appendChild(sm);
   cA.appendChild(mkToggle('Fonte para dislexia','Troca o texto do app pela fonte Lexend, mais fácil de ler.','dys'));
   cA.appendChild(mkToggle('Alto contraste','Escurece textos e reforça bordas em todo o app.','contrast'));
   view.appendChild(cA);

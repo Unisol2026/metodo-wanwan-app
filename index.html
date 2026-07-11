@@ -125,6 +125,27 @@ code{background:var(--surface2);padding:1px 6px;border-radius:6px;font-size:12px
 .big-btn.alt{background:var(--brand);box-shadow:var(--shadow-cta);color:#fff}
 .big-btn:active{transform:scale(.98)}
 .mission-card.hero .big-btn.alt{background:rgba(255,255,255,.14);box-shadow:none;color:#fff;border:1px solid rgba(255,255,255,.25)}
+.mission-card.hero .muted{color:rgba(255,255,255,.78)}
+.mission-card.hero .sub,.mission-card.hero h2{max-width:240px}
+.mission-card.hero .progress-dots i{background:rgba(255,255,255,.25)}
+.mission-card.hero .progress-dots i.done{background:var(--ok)}
+.mission-card.hero .progress-dots i.now{background:var(--amber);box-shadow:none}
+/* mascote CSS (handoff) — placeholder até a arte oficial */
+.mascot{width:86px;height:80px;animation:float 3.4s ease-in-out infinite;pointer-events:none}
+.mission-card.hero .mascot{position:absolute;right:12px;top:12px}
+.mascot i{position:absolute;display:block}
+.mascot .m-ear{width:26px;height:42px;background:#C9873B;border-radius:13px;top:6px}
+.mascot .m-ear.l{left:0;transform:rotate(-26deg)} .mascot .m-ear.r{right:0;transform:rotate(26deg)}
+.mascot .m-head{left:8px;top:8px;width:70px;height:66px;background:#F2C88A;border-radius:50% 50% 48% 48%}
+.mascot .m-eye{width:8px;height:10px;background:#2A2721;border-radius:50%;top:34px}
+.mascot .m-eye.l{left:27px} .mascot .m-eye.r{right:27px}
+.mascot .m-muz{left:50%;transform:translateX(-50%);top:44px;width:30px;height:22px;background:#FCF3E2;border-radius:50%}
+.mascot .m-nose{left:50%;transform:translateX(-50%);top:46px;width:11px;height:8px;background:#2A2721;border-radius:50%}
+.mascot .m-tongue{left:50%;transform:translateX(-50%);top:58px;width:10px;height:9px;background:#E26A50;border-radius:0 0 8px 8px}
+/* modo preferido (painel do responsável) */
+.segmode{display:flex;gap:8px;margin:8px 0 14px}
+.segmode button{flex:1;min-height:48px;border:1.5px solid var(--line);border-radius:13px;font-weight:800;font-size:13.5px;color:var(--muted);background:#fff}
+.segmode button.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-ink)}
 .progress-dots{display:flex;gap:6px;margin:10px 0}
 .progress-dots i{flex:1;height:10px;border-radius:999px;background:var(--line)}
 .progress-dots i.done{background:var(--ok)} .progress-dots i.now{background:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
@@ -298,7 +319,7 @@ summary{cursor:pointer;font-weight:700}
 <body>
 <div class="app">
   <div class="topbar">
-    <div class="brand" title="build v0.6.1">Método Wanwan <small>· mat 5–12 · <span id="buildTag">v0.6.1</span></small></div>
+    <div class="brand" title="build v0.6.1">Método Wanwan <small>· mat 5–12 · <span id="buildTag">v0.6.2</span></small></div>
     <div class="mode-toggle" id="modeToggle" title="Modo de sessão">
       <button data-mode="with_adult">✋ com adulto</button>
       <button data-mode="solo" class="on">sozinho</button>
