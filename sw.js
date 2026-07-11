@@ -5,7 +5,7 @@
    Sem rede a terceiros — coerente com a minimização LGPD do projeto. */
 'use strict';
 
-const CACHE_VERSION = 'wanwan-v0.6.0';
+const CACHE_VERSION = 'wanwan-v0.6.1';
 const APP_SHELL = [
   './',
   './index.html',
@@ -14,6 +14,7 @@ const APP_SHELL = [
   './engine.js',
   './app.js',
   './icon.svg',
+  './sw-register.js',
   './assets/fonts/baloo2-500.woff2',
   './assets/fonts/baloo2-600.woff2',
   './assets/fonts/baloo2-700.woff2',
