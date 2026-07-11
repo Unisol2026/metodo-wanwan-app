@@ -5,7 +5,7 @@
    Sem rede a terceiros — coerente com a minimização LGPD do projeto. */
 'use strict';
 
-const CACHE_VERSION = 'wanwan-v0.6.3';
+const CACHE_VERSION = 'wanwan-v0.7.0';
 const APP_SHELL = [
   './',
   './index.html',
@@ -38,7 +38,19 @@ const APP_SHELL = [
   './assets/img/joao.png',
   './assets/img/gema.png',
   './assets/img/bau.png',
-  './assets/img/trofeu.png'
+  './assets/img/trofeu.png',
+  './assets/img/exploracao-mapa.jpg',
+  './assets/img/ilha-cdt.jpg',
+  './assets/img/ilha-vp.jpg',
+  './assets/img/ilha-as.jpg',
+  './assets/img/ilha-mul.jpg',
+  './assets/img/ilha-div.jpg',
+  './assets/img/ilha-fdp.jpg',
+  './assets/img/ilha-geo.jpg',
+  './assets/img/ilha-mtd.jpg',
+  './assets/img/ilha-pal.jpg',
+  './assets/img/ilha-dgp.jpg',
+  './assets/img/ilha-lrp.jpg'
 ];
 
 // Instala: precache do shell. addAll é atômico (se 1 falhar, install falha).
