@@ -389,7 +389,33 @@ summary{cursor:pointer;font-weight:700}
 .quest-scene .qs-joao{position:absolute;right:8px;top:6px;width:62px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.3))}
 .child-wrap.tale-stage .mission-card{background:rgba(255,255,255,.97);border-color:#fff;
   box-shadow:0 16px 40px -26px rgba(42,39,33,.85)}
-@media(max-width:520px){.quest-scene{height:128px}.quest-scene .qs-joao{width:52px}}
+/* trilha do herói DENTRO da cena: substitui as bolinhas abstratas de progresso */
+.quest-scene{height:186px}
+.qs-track{position:absolute;inset:0;pointer-events:none}
+.qs-mark{position:absolute;width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.72);
+  border:2px solid rgba(42,39,33,.25);transform:translate(-50%,50%);transition:background .3s}
+.qs-mark.on{background:var(--amber);border-color:#fff;box-shadow:0 0 0 4px rgba(240,164,41,.35)}
+.qs-hero{position:absolute;width:56px;transform:translate(-50%,42%);transition:left .5s ease,bottom .5s ease;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.35));animation:float 3.4s ease-in-out infinite}
+.qs-hero.fixed{position:absolute;left:auto;right:8px;bottom:auto;top:6px;width:62px;transform:none;transition:none}
+.qs-bubble{position:absolute;left:10px;top:10px;max-width:64%;background:#fff;border-radius:16px 16px 16px 4px;
+  padding:8px 12px;font-family:var(--font-display);font-weight:600;font-size:13.5px;color:var(--ink);
+  border:1.5px solid var(--line);box-shadow:var(--shadow);animation:fadeUp .35s ease}
+.qs-bubble.ok{border-color:var(--ok);color:var(--ok-ink)}
+.qs-bubble.no{border-color:var(--amber);color:var(--amber-ink)}
+.rev-chip{flex:none;font-size:10.5px;font-weight:800;color:var(--brand-ink);background:var(--brand-soft);
+  border:1px solid var(--brand);border-radius:999px;padding:3px 8px}
+/* missão do dia: entra pelo mapa, com a parada de hoje pulsando */
+.today-band{position:relative;z-index:2;background:var(--brand-ink);color:#fff;border-radius:20px;padding:14px 16px;margin:10px 0 2px;
+  box-shadow:0 14px 30px -20px rgba(44,74,153,.9)}
+.today-band .tb-t{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.today-band .tb-s{font-family:var(--font-display);font-weight:600;font-size:18px;margin:2px 0 10px}
+.today-band .big-btn{width:auto;padding:12px 26px;min-height:50px}
+.tm-stop.pulse .tm-node{animation:pulseNode 1.6s ease-in-out infinite}
+@keyframes pulseNode{0%,100%{box-shadow:0 0 0 6px var(--amber-soft),0 8px 18px -8px rgba(42,39,33,.5)}
+  50%{box-shadow:0 0 0 14px rgba(240,164,41,.28),0 8px 18px -8px rgba(42,39,33,.5)}}
+.tm-stop.pulse .tm-node{border-color:var(--amber)}
+@media(max-width:520px){.quest-scene{height:158px}.qs-hero{width:48px}.qs-bubble{font-size:12.5px;max-width:70%}}
 /* manipulativos vestidos com o objeto do capítulo (feijão, folha, nuvem...) */
 .dc-dot.glyph{background:transparent;width:auto;height:auto;font-size:26px;line-height:1}
 .tenframe.glyphed .tf-cell.on{background:var(--amber-soft);border-color:var(--amber)}
@@ -399,7 +425,7 @@ summary{cursor:pointer;font-weight:700}
 <body>
 <div class="app">
   <div class="topbar">
-    <div class="brand" title="build v0.8.1">Método Wanwan <small>· mat 5–12 · <span id="buildTag">v0.8.1</span></small></div>
+    <div class="brand" title="build v0.9.0">Método Wanwan <small>· mat 5–12 · <span id="buildTag">v0.9.0</span></small></div>
     <div class="mode-toggle" id="modeToggle" title="Modo de sessão">
       <button data-mode="with_adult">✋ com adulto</button>
       <button data-mode="solo" class="on">sozinho</button>
