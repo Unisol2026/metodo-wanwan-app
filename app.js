@@ -884,7 +884,15 @@ function renderAdmin(){
   const r=el('div','row');
   const b1=el('button','btn ghost','⏩ Simular +1 dia');b1.onclick=()=>{S.devDayOffset++;E.markReviews(S,now());save();render();};
   const b2=el('button','btn ghost','↺ Resetar dados');b2.onclick=()=>{if(confirm('Apagar todo o progresso?')){S=E.newState();save();render();}};
-  r.append(b1,b2);dev.appendChild(r);
+  /* 10/07: atalho de demonstração — abre as ilhas sem terminar o diagnóstico. NÃO semeia nível
+     nenhum (regra 4 do manual intacta: sondagem só via exploração real); tudo começa do piso. */
+  const b3=el('button','btn ghost','⏭ Pular exploração (demo)');b3.onclick=()=>{
+    if(confirm('Marcar a exploração inicial como concluída? Atalho de demonstração: nada é semeado — as habilidades começam do zero e as missões calibram jogando.')){
+      S.placement.finished=true;S.placement.lastSessionBoundary=false;save();
+      alert('Pronto. Volte para a aba Criança: as ilhas e a Missão do dia estão abertas.');render();
+    }
+  };
+  r.append(b1,b2,b3);dev.appendChild(r);
   dev.appendChild(el('div','muted small','Dia simulado: hoje +'+S.devDayOffset));
   view.appendChild(dev);
 
